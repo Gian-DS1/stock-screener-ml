@@ -10,9 +10,9 @@ __pycache__/
 node_modules/
 frontend/dist/
 
-# Datos y artefactos (regenerables)
-data/
-models/
+# Datos y artefactos (regenerables) — solo en la raíz del repo
+/data/
+/models/
 
 # Secrets
 .env
