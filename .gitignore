@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Datos y artefactos (regenerables)
+data/
+models/
+
+# Secrets
+.env
+
+# IDE / SO
+.vscode/
+.idea/
+Thumbs.db
