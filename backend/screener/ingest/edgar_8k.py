@@ -11,6 +11,7 @@ Salida: data/raw/filings_8k.parquet
 """
 import re
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
@@ -25,6 +26,8 @@ from screener.ingest.sec import sec_get
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/{name}"
 ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/{doc}"
 _TEXT_CHARS = 4000
+_TEXT_WORKERS = 12      # hilos de descarga; el rate limiter compartido topa a 8 req/s
+_SAVE_BATCH = 2000      # persistir cada N filings (visibilidad + resiliencia)
 
 
 def filings_path():
@@ -123,19 +126,34 @@ def update_8k_filings(universe: pd.DataFrame, log=print) -> pd.DataFrame | None:
         log("  8-K: sin filings nuevos")
         return existing
 
-    log(f"  8-K: descargando texto de {len(new_rows)} filings nuevos...")
-    for n, row in enumerate(new_rows, 1):
-        row["text"] = _download_text(row)
-        if n % 250 == 0:
-            log(f"  8-K: texto {n}/{len(new_rows)}")
+    # Descarga de texto en paralelo: el rate limiter compartido garantiza <=8 req/s
+    # (límite SEC), pero solapar la latencia de red lleva el throughput real cerca
+    # de ese tope (~3-4x vs secuencial). Se persiste por lotes: visibilidad +
+    # resiliencia (un corte no obliga a re-descargar lo ya hecho).
+    total = len(new_rows)
+    log(f"  8-K: descargando texto de {total} filings nuevos (paralelo)...")
+    accumulated = existing
+    done = 0
+    for batch_start in range(0, total, _SAVE_BATCH):
+        batch = new_rows[batch_start : batch_start + _SAVE_BATCH]
+        with ThreadPoolExecutor(max_workers=_TEXT_WORKERS) as pool:
+            texts = list(pool.map(_download_text, batch))
+        for row, text in zip(batch, texts):
+            row["text"] = text
+        done += len(batch)
+        accumulated = _persist_batch(accumulated, batch)
+        log(f"  8-K: texto {done}/{total} (guardado parcial: {len(accumulated):,} filings)")
 
-    new_df = pd.DataFrame(new_rows)
+    log(f"  8-K: total {len(accumulated):,} filings de {accumulated['ticker'].nunique()} empresas")
+    return accumulated
+
+
+def _persist_batch(existing: pd.DataFrame | None, batch: list[dict]) -> pd.DataFrame:
+    new_df = pd.DataFrame(batch)
     new_df["filing_date"] = pd.to_datetime(new_df["filing_date"])
     for col in ("sent_pos", "sent_neg", "sent_neu", "sent_score"):
         new_df[col] = np.nan
-
     out = pd.concat([existing, new_df], ignore_index=True) if existing is not None else new_df
     out = out.drop_duplicates("accession").sort_values(["ticker", "filing_date"]).reset_index(drop=True)
     out.to_parquet(filings_path(), index=False)
-    log(f"  8-K: total {len(out):,} filings de {out['ticker'].nunique()} empresas")
     return out
