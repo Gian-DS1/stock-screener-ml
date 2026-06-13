@@ -114,12 +114,13 @@ export function Spinner({ label }: { label?: string }) {
 export function Empty({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-2 p-12 text-center">
-      <svg viewBox="0 0 32 32" className="size-8 stroke-faint" fill="none" strokeWidth="1.5">
-        <circle cx="16" cy="16" r="10" />
-        <line x1="16" y1="1" x2="16" y2="9" />
-        <line x1="16" y1="23" x2="16" y2="31" />
-        <line x1="1" y1="16" x2="9" y2="16" />
-        <line x1="23" y1="16" x2="31" y2="16" />
+      <svg viewBox="0 0 32 32" className="size-8 stroke-faint" fill="none" strokeWidth="1.5" strokeLinecap="round">
+        <line x1="9" y1="10" x2="9" y2="22" />
+        <rect x="6.5" y="13" width="5" height="6" rx="1" />
+        <line x1="16" y1="7" x2="16" y2="20" />
+        <rect x="13.5" y="10" width="5" height="7" rx="1" />
+        <line x1="23" y1="12" x2="23" y2="25" />
+        <rect x="20.5" y="15" width="5" height="6" rx="1" />
       </svg>
       <p className="max-w-sm text-sm text-muted">{children}</p>
     </div>

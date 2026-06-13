@@ -2,7 +2,7 @@
 # Ejecutar como administrador:  powershell -ExecutionPolicy Bypass -File scripts\register_task.ps1
 param(
     [string]$At = "18:30",   # hora local, tras el cierre de NYSE (16:00 ET)
-    [string]$TaskName = "SniperScreener Daily"
+    [string]$TaskName = "StockScreener Daily"
 )
 
 $backend = Join-Path (Split-Path $PSScriptRoot -Parent) "backend"

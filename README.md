@@ -1,6 +1,6 @@
-# Sniper Screener
+# Stock Screener
 
-Stock screener personal impulsado por ML. Filosofía francotirador: **pocas
+Stock screener personal impulsado por ML. Filosofía selectiva: **pocas
 oportunidades de altísima calidad** — empresas en descuento con potencial de
 crecimiento a mediano/largo plazo — en lugar de muchas señales de baja calidad.
 
@@ -56,9 +56,9 @@ powershell -ExecutionPolicy Bypass -File scripts\register_task.ps1
 
 ## Uso diario
 
-**La forma fácil:** doble clic en el acceso directo **"Sniper Screener"** del
+**La forma fácil:** doble clic en el acceso directo **"Stock Screener"** del
 escritorio. Arranca el sistema sin terminal (solo en `127.0.0.1`, sin puertos
-expuestos) y abre el dashboard. Para cerrarlo, **"Detener Sniper Screener"**.
+expuestos) y abre el dashboard. Para cerrarlo, **"Detener Stock Screener"**.
 
 Guía detallada de uso: [TUTORIAL.md](TUTORIAL.md).
 

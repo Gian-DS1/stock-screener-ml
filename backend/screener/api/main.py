@@ -14,7 +14,7 @@ FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
 
 def create_app() -> FastAPI:
     init_db()
-    app = FastAPI(title="Sniper Screener", docs_url="/api/docs", openapi_url="/api/openapi.json")
+    app = FastAPI(title="Stock Screener", docs_url="/api/docs", openapi_url="/api/openapi.json")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],

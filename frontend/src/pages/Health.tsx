@@ -66,8 +66,8 @@ export default function Health() {
               <p className="border-l-2 border-pos/40 pl-3 text-xs leading-relaxed text-muted">
                 Objetivo: ≥{fmtPct(m.min_return, 0)} de retorno máximo en {m.horizon_days} días
                 hábiles. Base rate {fmtPct(m.metrics.oof.base_rate)} → el modelo selecciona con{' '}
-                {fmtPct(m.metrics.oof.precision)} de acierto (modo francotirador:{' '}
-                {m.metrics.oof.n_signals.toLocaleString()} disparos de{' '}
+                {fmtPct(m.metrics.oof.precision)} de acierto (modo selectivo:{' '}
+                {m.metrics.oof.n_signals.toLocaleString()} señales de{' '}
                 {m.metrics.oof.n_oof.toLocaleString()} oportunidades evaluadas).
               </p>
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Check, Crosshair, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CandlestickChart, Check, X } from 'lucide-react'
 
 type Placement = 'top' | 'bottom' | 'left' | 'right' | 'center'
 
@@ -16,7 +16,7 @@ interface Step {
 
 const STEPS: Step[] = [
   {
-    title: 'Bienvenido a tu francotirador',
+    title: 'Bienvenido a Stock Screener',
     body: 'Este sistema busca pocas oportunidades de altísima calidad: empresas en descuento con potencial de crecimiento. Te muestro en 30 segundos cómo se usa.',
     route: '/oportunidades',
     placement: 'center',
@@ -224,7 +224,7 @@ export default function GuidedTour({ open, onClose }: { open: boolean; onClose: 
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <Crosshair size={16} color="#3ddc97" />
+          <CandlestickChart size={16} color="#3ddc97" />
           <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#66788a' }}>
             paso {index + 1} de {STEPS.length}
           </span>

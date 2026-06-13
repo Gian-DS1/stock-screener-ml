@@ -5,6 +5,7 @@ import { useChart, useNews, useSignalStatus, type Signal } from '../lib/api'
 import { featureLabel, fmtDate, fmtSignedPct, fmtUsd } from '../lib/format'
 import { Button, Panel, Spinner, Tag } from './ui'
 import AddPositionModal from './AddPositionModal'
+import InfoTip from './InfoTip'
 import clsx from 'clsx'
 
 export default function SignalDetail({ signal, onClose }: { signal: Signal; onClose: () => void }) {
@@ -38,8 +39,9 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
             </div>
             <div className="flex items-center justify-between text-xs text-muted">
               <span className="truncate">{signal.company}</span>
-              <span className={clsx('tnum', (signal.pct_vs_sma200 ?? 0) <= 0 ? 'text-pos' : 'text-warn')}>
+              <span className={clsx('tnum flex items-center gap-1', (signal.pct_vs_sma200 ?? 0) <= 0 ? 'text-pos' : 'text-warn')}>
                 {fmtSignedPct(signal.pct_vs_sma200)} vs SMA200
+                <InfoTip metric="pct_vs_sma200" />
               </span>
             </div>
           </div>
@@ -78,14 +80,20 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
 
           {/* por qué dispara: SHAP */}
           <div data-tour="detalle-shap">
-            <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
+            <h3 className="mb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
               Por qué dispara el modelo
             </h3>
+            <p className="mb-2 text-[11px] leading-snug text-faint">
+              Cada barra mide cuánto empuja esa variable la decisión del modelo. Verde la apoya,
+              roja va en contra. Pasa el cursor por el icono <span className="text-info">ⓘ</span> para
+              entender cada una.
+            </p>
             <div className="space-y-1.5">
               {signal.shap.map((item) => (
                 <div key={item.feature} className="flex items-center gap-2 text-xs">
-                  <span className="w-36 shrink-0 truncate text-muted" title={item.feature}>
-                    {featureLabel(item.feature)}
+                  <span className="flex w-36 shrink-0 items-center gap-1 text-muted">
+                    <span className="truncate" title={item.feature}>{featureLabel(item.feature)}</span>
+                    <InfoTip metric={item.feature} />
                   </span>
                   <div className="relative h-2.5 flex-1">
                     <div className="absolute inset-y-0 left-1/2 w-px bg-edge" />
@@ -109,9 +117,12 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
             </h3>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
               {Object.entries(signal.quality_breakdown).map(([k, v]) => (
-                <div key={k} className="flex justify-between border-b border-hairline/50 py-0.5">
-                  <span className="truncate text-muted">{featureLabel(k)}</span>
-                  <span className="tnum">{v.toFixed(1)}</span>
+                <div key={k} className="flex items-center justify-between gap-1 border-b border-hairline/50 py-0.5">
+                  <span className="flex min-w-0 items-center gap-1 text-muted">
+                    <span className="truncate">{featureLabel(k)}</span>
+                    <InfoTip metric={k} />
+                  </span>
+                  <span className="tnum shrink-0">{v.toFixed(1)}</span>
                 </div>
               ))}
             </div>

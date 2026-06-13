@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import clsx from 'clsx'
-import { Bell, Crosshair, HelpCircle, RefreshCw } from 'lucide-react'
+import { Bell, CandlestickChart, HelpCircle, RefreshCw } from 'lucide-react'
 import { useAlerts, usePipelineStatus, usePipelineTrigger } from './lib/api'
 import Opportunities from './pages/Opportunities'
 import Portfolio from './pages/Portfolio'
@@ -37,9 +37,9 @@ export default function App() {
       <header className="sticky top-0 z-30 -mx-4 mb-5 border-b border-edge bg-ink/90 px-4 backdrop-blur">
         <div className="flex h-14 items-center gap-6">
           <div className="flex items-center gap-2.5">
-            <Crosshair className="size-5 text-pos" strokeWidth={1.75} />
+            <CandlestickChart className="size-5 text-pos" strokeWidth={1.75} />
             <h1 className="font-mono text-sm font-semibold uppercase tracking-[0.25em]">
-              Sniper<span className="text-pos">Screener</span>
+              Stock<span className="text-pos">Screener</span>
             </h1>
           </div>
 

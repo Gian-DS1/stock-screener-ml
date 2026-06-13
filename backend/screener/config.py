@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # --- API keys / identificación ---
     fred_api_key: str = ""
     finnhub_api_key: str = ""
-    sec_user_agent: str = "SniperScreener personal contacto@example.com"
+    sec_user_agent: str = "StockScreener personal contacto@example.com"
 
     # --- Rutas ---
     data_dir: Path = PROJECT_ROOT / "data"

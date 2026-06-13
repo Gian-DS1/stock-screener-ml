@@ -99,6 +99,14 @@ def drift() -> None:
 
 
 @app.command()
+def audit() -> None:
+    """Audita la cobertura y coherencia de los datos y del modelo."""
+    from screener.diagnostics import audit as run_audit
+
+    run_audit()
+
+
+@app.command()
 def backtest(
     start: str = typer.Option("2018-01-01"),
     end: str = typer.Option("", help="Vacío = hoy"),

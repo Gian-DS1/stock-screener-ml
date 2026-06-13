@@ -2206,74 +2206,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sniper-screener"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "fastapi" },
-    { name = "fredapi" },
-    { name = "joblib" },
-    { name = "lxml" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pyarrow" },
-    { name = "pydantic-settings" },
-    { name = "requests" },
-    { name = "scikit-learn" },
-    { name = "scipy" },
-    { name = "shap" },
-    { name = "sqlalchemy" },
-    { name = "typer" },
-    { name = "uvicorn", extra = ["standard"] },
-    { name = "yfinance" },
-]
-
-[package.optional-dependencies]
-drift = [
-    { name = "evidently" },
-]
-sentiment = [
-    { name = "torch" },
-    { name = "transformers" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "httpx" },
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "evidently", marker = "extra == 'drift'", specifier = ">=0.7" },
-    { name = "fastapi", specifier = ">=0.115" },
-    { name = "fredapi", specifier = ">=0.5.2" },
-    { name = "joblib", specifier = ">=1.4" },
-    { name = "lxml", specifier = ">=5.2" },
-    { name = "numpy", specifier = ">=1.26" },
-    { name = "pandas", specifier = ">=2.2" },
-    { name = "pyarrow", specifier = ">=16" },
-    { name = "pydantic-settings", specifier = ">=2.4" },
-    { name = "requests", specifier = ">=2.32" },
-    { name = "scikit-learn", specifier = ">=1.5" },
-    { name = "scipy", specifier = ">=1.13" },
-    { name = "shap", specifier = ">=0.46" },
-    { name = "sqlalchemy", specifier = ">=2.0" },
-    { name = "torch", marker = "extra == 'sentiment'", specifier = ">=2.7", index = "https://download.pytorch.org/whl/cu128" },
-    { name = "transformers", marker = "extra == 'sentiment'", specifier = ">=4.44" },
-    { name = "typer", specifier = ">=0.12" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
-    { name = "yfinance", specifier = ">=0.2.50" },
-]
-provides-extras = ["sentiment", "drift"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "pytest", specifier = ">=8.2" },
-]
-
-[[package]]
 name = "soupsieve"
 version = "2.8.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2367,6 +2299,74 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/34/0e/2408735aca9e764643196212f9069912100151414dd617d39ffc72d77eee/statsmodels-0.14.6-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3414e40c073d725007a6603a18247ab7af3467e1af4a5e5a24e4c27bc26673b4", size = 10337587, upload-time = "2025-12-05T23:13:37.597Z" },
     { url = "https://files.pythonhosted.org/packages/0f/36/4d44f7035ab3c0b2b6a4c4ebb98dedf36246ccbc1b3e2f51ebcd7ac83abb/statsmodels-0.14.6-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:a518d3f9889ef920116f9fa56d0338069e110f823926356946dae83bc9e33e19", size = 10363350, upload-time = "2025-12-05T23:13:53.08Z" },
     { url = "https://files.pythonhosted.org/packages/26/33/f1652d0c59fa51de18492ee2345b65372550501ad061daa38f950be390b6/statsmodels-0.14.6-cp314-cp314-win_amd64.whl", hash = "sha256:151b73e29f01fe619dbce7f66d61a356e9d1fe5e906529b78807df9189c37721", size = 9588010, upload-time = "2025-12-05T23:14:07.28Z" },
+]
+
+[[package]]
+name = "stock-screener"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "fastapi" },
+    { name = "fredapi" },
+    { name = "joblib" },
+    { name = "lxml" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pyarrow" },
+    { name = "pydantic-settings" },
+    { name = "requests" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "shap" },
+    { name = "sqlalchemy" },
+    { name = "typer" },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "yfinance" },
+]
+
+[package.optional-dependencies]
+drift = [
+    { name = "evidently" },
+]
+sentiment = [
+    { name = "torch" },
+    { name = "transformers" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "httpx" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "evidently", marker = "extra == 'drift'", specifier = ">=0.7" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "fredapi", specifier = ">=0.5.2" },
+    { name = "joblib", specifier = ">=1.4" },
+    { name = "lxml", specifier = ">=5.2" },
+    { name = "numpy", specifier = ">=1.26" },
+    { name = "pandas", specifier = ">=2.2" },
+    { name = "pyarrow", specifier = ">=16" },
+    { name = "pydantic-settings", specifier = ">=2.4" },
+    { name = "requests", specifier = ">=2.32" },
+    { name = "scikit-learn", specifier = ">=1.5" },
+    { name = "scipy", specifier = ">=1.13" },
+    { name = "shap", specifier = ">=0.46" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
+    { name = "torch", marker = "extra == 'sentiment'", specifier = ">=2.7", index = "https://download.pytorch.org/whl/cu128" },
+    { name = "transformers", marker = "extra == 'sentiment'", specifier = ">=4.44" },
+    { name = "typer", specifier = ">=0.12" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+    { name = "yfinance", specifier = ">=0.2.50" },
+]
+provides-extras = ["sentiment", "drift"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "pytest", specifier = ">=8.2" },
 ]
 
 [[package]]

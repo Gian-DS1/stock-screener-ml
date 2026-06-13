@@ -1,4 +1,4 @@
-' Sniper Screener - Lanzador
+' Stock Screener - Lanzador
 ' Arranca el backend local (sin ventana visible) y abre el dashboard en el navegador.
 ' El servidor escucha solo en 127.0.0.1 => invisible para la red y para internet.
 Set sh = CreateObject("WScript.Shell")

@@ -1,5 +1,5 @@
 [project]
-name = "sniper-screener"
+name = "stock-screener"
 version = "0.1.0"
 description = "Stock screener personal impulsado por ML: pocas oportunidades de alta calidad"
 requires-python = ">=3.12"

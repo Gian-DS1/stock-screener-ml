@@ -6,7 +6,7 @@
   horizonte de predicción entre train y validación: el modelo nunca ve filas
   cuya etiqueta se solape con el periodo de validación.
 - Umbral de decisión: máxima Precisión sujeta a Recall >= recall_floor sobre
-  las predicciones out-of-fold agrupadas (filosofía francotirador).
+  las predicciones out-of-fold agrupadas (filosofía selectiva).
 """
 import json
 from datetime import datetime, timezone

@@ -1,4 +1,4 @@
-# Tutorial de uso — Sniper Screener
+# Tutorial de uso — Stock Screener
 
 Guía completa para operar el sistema y entender qué hace por dentro. Está
 pensada para uso personal y local: nada se expone a internet.
@@ -16,11 +16,11 @@ En tu **escritorio** tienes dos accesos directos:
 
 | Acceso directo | Qué hace |
 |---|---|
-| **Sniper Screener** | Arranca el sistema (sin ventana de terminal) y abre el dashboard en tu navegador. |
-| **Detener Sniper Screener** | Cierra el backend. Tus datos quedan guardados. |
+| **Stock Screener** | Arranca el sistema (sin ventana de terminal) y abre el dashboard en tu navegador. |
+| **Detener Stock Screener** | Cierra el backend. Tus datos quedan guardados. |
 
-- **Doble clic en "Sniper Screener"** → espera ~10 segundos → se abre el navegador en `http://localhost:8000`.
-- Para cerrarlo, doble clic en **"Detener Sniper Screener"**. Cerrar solo la pestaña del navegador NO detiene el backend (sigue corriendo en segundo plano, lo cual es útil si quieres volver a abrir la pestaña).
+- **Doble clic en "Stock Screener"** → espera ~10 segundos → se abre el navegador en `http://localhost:8000`.
+- Para cerrarlo, doble clic en **"Detener Stock Screener"**. Cerrar solo la pestaña del navegador NO detiene el backend (sigue corriendo en segundo plano, lo cual es útil si quieres volver a abrir la pestaña).
 
 > **Seguridad:** el sistema escucha únicamente en `127.0.0.1` (tu propia máquina).
 > Ningún otro dispositivo de tu red ni de internet puede verlo o acceder. No se
@@ -171,7 +171,7 @@ que el precio alcance **+15% de retorno máximo en 120 días hábiles** (~6 mese
 Se valida con **validación cruzada temporal** (entrena con pasado, valida con
 futuro, con un hueco de separación). El umbral de decisión se optimiza para
 **maximizar la precisión** exigiendo capturar al menos el 25% de las
-oportunidades — filosofía francotirador: dispara poco, pero con alta certeza.
+oportunidades — filosofía selectiva: genera pocas señales, pero con alta certeza.
 
 **Quality score** (reglas transparentes, sin ML): puntúa 0–100 combinando
 calidad del negocio (ROIC, márgenes, crecimiento), descuento de valoración
