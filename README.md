@@ -47,21 +47,31 @@ cd ..\frontend
 npm install
 npm run build        # FastAPI sirve frontend/dist en producción
 
-# 6. Tarea diaria automática (tras el cierre del mercado)
+# 6. Accesos directos de un clic en el escritorio
+powershell -ExecutionPolicy Bypass -File scripts\instalar_accesos.ps1
+
+# 7. (opcional) Tarea diaria automática (tras el cierre del mercado)
 powershell -ExecutionPolicy Bypass -File scripts\register_task.ps1
 ```
 
 ## Uso diario
 
+**La forma fácil:** doble clic en el acceso directo **"Sniper Screener"** del
+escritorio. Arranca el sistema sin terminal (solo en `127.0.0.1`, sin puertos
+expuestos) y abre el dashboard. Para cerrarlo, **"Detener Sniper Screener"**.
+
+Guía detallada de uso: [TUTORIAL.md](TUTORIAL.md).
+
+Alternativa por terminal:
 ```powershell
 cd backend
-uv run uvicorn screener.api.main:app --port 8000
+uv run uvicorn screener.api.main:app --host 127.0.0.1 --port 8000
 # -> http://localhost:8000  (dashboard)  ·  /api/docs (API)
 ```
 
-La tarea programada ejecuta `run-daily` (ingesta incremental → señales →
-evaluación del portafolio → drift). También puedes dispararlo desde el botón
-**Actualizar** del dashboard.
+La tarea programada (o el botón **Actualizar** del dashboard) ejecuta `run-daily`
+(ingesta incremental → señales → evaluación del portafolio → drift). Todo el
+estado persiste en `data/` y `models/`, así que continúas donde lo dejaste.
 
 ## Comandos CLI
 
