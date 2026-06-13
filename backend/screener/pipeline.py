@@ -8,27 +8,79 @@ import pandas as pd
 from screener.config import ensure_dirs, settings
 
 
-class RunProgress:
-    """Reporta la fase y el avance de un run a la base de datos en vivo.
+# Plan de fases por tipo de run: (etiqueta, peso ≈ duración relativa). Permite
+# convertir "fase actual + sub-progreso" en un porcentaje GLOBAL 0-100 sobre el
+# que el dashboard estima el tiempo restante. Las etiquetas deben coincidir con
+# las que reportan el pipeline y la ingesta.
+PHASE_PLANS: dict[str, list[tuple[str, float]]] = {
+    "daily": [
+        ("Actualizando universo (índices)", 2),
+        ("Descargando precios", 4),
+        ("Descargando fundamentales (EDGAR)", 5),
+        ("Descargando macro (FRED)", 1),
+        ("Descargando 8-K (SEC)", 3),
+        ("Analizando sentimiento (FinBERT)", 2),
+        ("Generando señales", 4),
+        ("Evaluando portafolio", 1),
+        ("Chequeo de drift", 2),
+    ],
+    "backfill": [
+        ("Actualizando universo (índices)", 1),
+        ("Descargando precios", 6),
+        ("Descargando fundamentales (EDGAR)", 8),
+        ("Descargando macro (FRED)", 1),
+        ("Descargando 8-K (SEC)", 60),
+        ("Analizando sentimiento (FinBERT)", 12),
+    ],
+    "build-dataset": [("Construyendo dataset", 1)],
+    "train": [("Entrenando modelo", 1)],
+    "score": [("Generando señales", 1)],
+    "drift": [("Chequeo de drift", 1)],
+}
 
-    El dashboard lee estos campos por polling para mostrar una barra. Las
-    actualizaciones son por fase/lote (no por item), así que el coste de
-    escritura es despreciable y, con WAL, no bloquea las lecturas del API.
+
+class RunProgress:
+    """Reporta a la base de datos un porcentaje GLOBAL (0-100) del run en vivo.
+
+    Combina la fase actual (según un plan ponderado) con su sub-progreso
+    (current/total) en un único porcentaje monótono. El dashboard lo lee por
+    polling y, con la hora de inicio, estima el tiempo restante.
     """
 
-    def __init__(self, run_id: int):
+    def __init__(self, run_id: int, kind: str = "daily"):
         self.run_id = run_id
+        plan = PHASE_PLANS.get(kind) or [("", 1.0)]
+        self.labels = [p[0] for p in plan]
+        self.weights = [p[1] for p in plan]
+        self.total_w = sum(self.weights) or 1.0
+        self.idx = 0
+        self.last_overall = 0
+
+    def overall_pct(self, phase: str, current: int | None = None, total: int | None = None) -> int:
+        """Porcentaje global (0-99) combinando fase + sub-progreso. Monótono."""
+        if phase in self.labels:
+            self.idx = self.labels.index(phase)
+        frac = 0.0
+        if total and total > 0 and current is not None:
+            frac = max(0.0, min(1.0, current / total))
+        acc = sum(self.weights[: self.idx]) + self.weights[self.idx] * frac
+        overall = int(round(100 * acc / self.total_w))
+        # nunca retrocede y se reserva el 100% para el cierre del run
+        overall = max(self.last_overall, min(overall, 99))
+        self.last_overall = overall
+        return overall
 
     def update(self, phase: str, current: int | None = None, total: int | None = None) -> None:
         from screener.db import Run, get_session
         from screener.db.models import utcnow
 
+        overall = self.overall_pct(phase, current, total)
         with get_session() as session:
             run = session.get(Run, self.run_id)
             if run is not None:
                 run.phase = phase
-                run.progress_current = current
-                run.progress_total = total
+                run.progress_current = overall
+                run.progress_total = 100
                 run.updated_at = utcnow()
 
 
@@ -54,13 +106,15 @@ def audited_run(kind: str) -> Iterator[RunProgress]:
 
     init_db()
     with get_session() as session:
-        run = Run(kind=kind, phase="iniciando")
+        run = Run(kind=kind, phase="iniciando", progress_current=0, progress_total=100)
         session.add(run)
         session.flush()
         run_id = run.id
 
+    # el plan de fases se elige por el kind del run (daily/backfill/...)
+    plan_kind = "daily" if kind == "daily" else kind
     try:
-        yield RunProgress(run_id)
+        yield RunProgress(run_id, plan_kind)
     except Exception:
         with get_session() as session:
             run = session.get(Run, run_id)
@@ -75,6 +129,8 @@ def audited_run(kind: str) -> Iterator[RunProgress]:
             if run.status == "running":
                 run.status = "success"
             run.phase = "completado"
+            run.progress_current = 100
+            run.progress_total = 100
             run.finished_at = utcnow()
 
 

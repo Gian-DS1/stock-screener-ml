@@ -122,7 +122,7 @@ def update_8k_filings(universe: pd.DataFrame, log=print, progress=None) -> pd.Da
         if n % 100 == 0:
             log(f"  8-K: listados {n}/{len(targets)} ({len(new_rows)} nuevos)")
             if progress:
-                progress.update("Listando 8-K por empresa", n, len(targets))
+                progress.update("Descargando 8-K (SEC)")  # marca la fase; el % avanza con el texto
 
     if not new_rows:
         log("  8-K: sin filings nuevos")
@@ -146,7 +146,7 @@ def update_8k_filings(universe: pd.DataFrame, log=print, progress=None) -> pd.Da
         accumulated = _persist_batch(accumulated, batch)
         log(f"  8-K: texto {done}/{total} (guardado parcial: {len(accumulated):,} filings)")
         if progress:
-            progress.update("Descargando texto de 8-K", done, total)
+            progress.update("Descargando 8-K (SEC)", done, total)
 
     log(f"  8-K: total {len(accumulated):,} filings de {accumulated['ticker'].nunique()} empresas")
     return accumulated
