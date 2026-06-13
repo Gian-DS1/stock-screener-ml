@@ -102,13 +102,17 @@ def update_8k_filings(universe: pd.DataFrame, log=print) -> pd.DataFrame | None:
     ensure_dirs()
     existing = load_filings()
     known: set[str] = set(existing["accession"]) if existing is not None else set()
-    # la primera vez se recorren las páginas históricas; después solo el feed reciente
-    full_history = existing is None or existing.empty
+    # el recorrido de páginas históricas se decide POR EMPRESA: una CIK sin
+    # filings previos necesita su histórico completo aunque otras ya lo tengan
+    known_ciks: set[int] = (
+        set(existing["cik"].astype(int)) if existing is not None and not existing.empty else set()
+    )
 
     targets = universe.dropna(subset=["cik"])[["cik", "ticker"]].drop_duplicates("cik")
     new_rows: list[dict] = []
     for n, row in enumerate(targets.itertuples(), 1):
         try:
+            full_history = int(row.cik) not in known_ciks
             new_rows += _list_company_8k(int(row.cik), row.ticker, known, full_history)
         except Exception as exc:
             log(f"  8-K: fallo listando {row.ticker}: {exc}")

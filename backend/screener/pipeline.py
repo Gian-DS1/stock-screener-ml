@@ -67,7 +67,10 @@ def run_backfill(tickers: list[str] | None = None, skip_sentiment: bool = False,
     update_fundamentals(uni, log=log)
 
     log("Descargando macro FRED...")
-    update_macro(log=log)
+    try:
+        update_macro(log=log)
+    except Exception as exc:  # macro caída no debe abortar el resto del backfill
+        log(f"  macro: fallo no bloqueante: {exc}")
 
     if not skip_sentiment:
         try:

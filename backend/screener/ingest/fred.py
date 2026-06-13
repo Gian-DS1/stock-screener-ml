@@ -21,9 +21,30 @@ SERIES = {
     "consumer_sentiment": "UMCSENT",  # sentimiento del consumidor U. Michigan (mensual)
 }
 
+# Series diarias de mercado: ALFRED rechaza all_releases (>2000 vintages) y no
+# hace falta — nunca se revisan. PIT: disponibles al día siguiente de la sesión.
+DAILY_MARKET_SERIES = {"treasury_10y", "yield_curve_10y2y"}
+
 
 def macro_path():
     return settings.raw_dir / "macro.parquet"
+
+
+def _fetch_series(fred, name: str, sid: str) -> pd.DataFrame:
+    if name in DAILY_MARKET_SERIES:
+        s = fred.get_series(sid).dropna()
+        return pd.DataFrame({
+            "date": s.index,
+            "realtime_start": s.index + pd.Timedelta(days=1),
+            "value": s.to_numpy(),
+        })
+    releases = fred.get_series_all_releases(sid).dropna(subset=["value"])
+    # primera publicación de cada observación = dato PIT
+    return (
+        releases.sort_values("realtime_start")
+        .drop_duplicates(subset=["date"], keep="first")
+        .loc[:, ["date", "realtime_start", "value"]]
+    )
 
 
 def update_macro(log=print) -> pd.DataFrame | None:
@@ -35,18 +56,18 @@ def update_macro(log=print) -> pd.DataFrame | None:
     fred = Fred(api_key=settings.fred_api_key)
     frames = []
     for name, sid in SERIES.items():
-        releases = fred.get_series_all_releases(sid)
-        releases = releases.dropna(subset=["value"])
-        # primera publicación de cada observación = dato PIT
-        first = (
-            releases.sort_values("realtime_start")
-            .drop_duplicates(subset=["date"], keep="first")
-            .loc[:, ["date", "realtime_start", "value"]]
-        )
+        try:
+            first = _fetch_series(fred, name, sid)
+        except Exception as exc:  # una serie caída no debe tumbar el backfill
+            log(f"  macro: fallo en {name} ({sid}): {exc}")
+            continue
         first["series"] = name
         frames.append(first)
         log(f"  macro: {name} ({sid}) {len(first)} observaciones")
 
+    if not frames:
+        log("  macro: ninguna serie disponible")
+        return None
     out = pd.concat(frames, ignore_index=True)
     out["date"] = pd.to_datetime(out["date"])
     out["realtime_start"] = pd.to_datetime(out["realtime_start"])
