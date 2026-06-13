@@ -46,7 +46,7 @@ export default function Health() {
     <div className="space-y-4">
       {/* fila superior: modelo + drift */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Panel title="Modelo táctico activo" className="lg:col-span-2">
+        <Panel dataTour="salud-modelo" title="Modelo táctico activo" className="lg:col-span-2">
           {!m ? (
             <Empty>No hay modelo entrenado todavía. Lanza un entrenamiento para empezar.</Empty>
           ) : (
@@ -102,7 +102,7 @@ export default function Health() {
         </Panel>
 
         <div className="space-y-4">
-          <Panel title="Deriva (drift)">
+          <Panel dataTour="salud-drift" title="Deriva (drift)">
             <div className="space-y-3 p-4">
               <DriftLight label="Datos (34 features)" report={data.drift.data} />
               <DriftLight label="Predicciones (KS)" report={data.drift.prediction} />

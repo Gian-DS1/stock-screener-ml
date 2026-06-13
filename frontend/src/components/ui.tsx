@@ -6,14 +6,16 @@ export function Panel({
   right,
   children,
   className,
+  dataTour,
 }: {
   title?: string
   right?: ReactNode
   children: ReactNode
   className?: string
+  dataTour?: string
 }) {
   return (
-    <section className={clsx('border border-edge bg-panel/80 backdrop-blur-sm', className)}>
+    <section data-tour={dataTour} className={clsx('border border-edge bg-panel/80 backdrop-blur-sm', className)}>
       {title && (
         <header className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
           <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">

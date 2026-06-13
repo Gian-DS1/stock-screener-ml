@@ -159,6 +159,7 @@ export default function Portfolio() {
     <div className="grid grid-cols-[1fr_360px] gap-4">
       <div className="space-y-4">
         <Panel
+          dataTour="portfolio-posiciones"
           title={`Posiciones abiertas · ${open.length}/${data.max_positions}`}
           right={
             <Button tone="primary" onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 py-1">
@@ -229,6 +230,7 @@ export default function Portfolio() {
       </div>
 
       <Panel
+        dataTour="portfolio-alertas"
         title={`Alertas ${unread.length > 0 ? `· ${unread.length} sin leer` : ''}`}
         className="self-start"
         right={

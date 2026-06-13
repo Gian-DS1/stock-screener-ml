@@ -1,11 +1,13 @@
+import { useCallback, useEffect, useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import clsx from 'clsx'
-import { Bell, Crosshair, RefreshCw } from 'lucide-react'
+import { Bell, Crosshair, HelpCircle, RefreshCw } from 'lucide-react'
 import { useAlerts, usePipelineStatus, usePipelineTrigger } from './lib/api'
 import Opportunities from './pages/Opportunities'
 import Portfolio from './pages/Portfolio'
 import Health from './pages/Health'
 import PipelineProgress from './components/PipelineProgress'
+import GuidedTour from './components/GuidedTour'
 
 const TABS = [
   { to: '/oportunidades', label: 'Oportunidades' },
@@ -19,6 +21,16 @@ export default function App() {
   const trigger = usePipelineTrigger()
   const running = status?.running?.kind ?? null
   const unread = alerts?.length ?? 0
+  const [tourOpen, setTourOpen] = useState(false)
+  const closeTour = useCallback(() => setTourOpen(false), [])
+
+  // Lanza el tour automáticamente la primera vez que se abre el dashboard
+  useEffect(() => {
+    if (!localStorage.getItem('tour_seen_v1')) {
+      const t = setTimeout(() => setTourOpen(true), 1200)
+      return () => clearTimeout(t)
+    }
+  }, [])
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[1480px] flex-col px-4 pb-10">
@@ -69,6 +81,7 @@ export default function App() {
               </span>
             )}
             <button
+              data-tour="actualizar"
               onClick={() => trigger.mutate('run-daily')}
               disabled={!!running}
               title="Actualizar datos y señales ahora"
@@ -76,6 +89,14 @@ export default function App() {
             >
               <RefreshCw className={clsx('size-3.5', running && 'animate-spin')} />
               Actualizar
+            </button>
+            <button
+              onClick={() => setTourOpen(true)}
+              title="Tour guiado"
+              aria-label="Tour guiado"
+              className="flex items-center justify-center border border-edge bg-panel p-1.5 text-muted transition-colors hover:border-info/50 hover:text-info"
+            >
+              <HelpCircle className="size-4" />
             </button>
           </div>
         </div>
@@ -95,6 +116,8 @@ export default function App() {
       <footer className="mt-8 border-t border-hairline pt-3 font-mono text-[10px] uppercase tracking-widest text-faint">
         uso personal · las señales no son consejo financiero · el sistema nunca opera solo
       </footer>
+
+      <GuidedTour open={tourOpen} onClose={closeTour} />
     </div>
   )
 }

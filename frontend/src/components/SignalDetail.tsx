@@ -77,7 +77,7 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
           </div>
 
           {/* por qué dispara: SHAP */}
-          <div>
+          <div data-tour="detalle-shap">
             <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
               Por qué dispara el modelo
             </h3>
@@ -103,7 +103,7 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
           </div>
 
           {/* desglose de calidad */}
-          <div>
+          <div data-tour="detalle-calidad">
             <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
               Calidad {signal.quality_score.toFixed(0)}/100
             </h3>
@@ -157,7 +157,7 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
           </div>
 
           {/* acciones */}
-          <div className="flex gap-2 border-t border-hairline pt-4">
+          <div data-tour="detalle-registrar" className="flex gap-2 border-t border-hairline pt-4">
             <Button tone="primary" className="flex-1" onClick={() => setShowBuy(true)}>
               Registrar posición
             </Button>

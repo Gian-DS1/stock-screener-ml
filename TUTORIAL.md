@@ -3,6 +3,11 @@
 Guía completa para operar el sistema y entender qué hace por dentro. Está
 pensada para uso personal y local: nada se expone a internet.
 
+> **Tour interactivo:** la primera vez que abres el dashboard se inicia un tour
+> guiado que resalta cada parte de la interfaz paso a paso. Puedes repetirlo
+> cuando quieras con el botón de ayuda (**?**) arriba a la derecha. Este
+> documento es la referencia escrita y más detallada de ese mismo recorrido.
+
 ---
 
 ## 1. Arrancar y detener (sin terminal)

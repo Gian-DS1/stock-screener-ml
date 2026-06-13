@@ -25,6 +25,7 @@ export default function Opportunities() {
       <Panel
         title={`Objetivos en la mira · ${visible.length}`}
         className="min-w-0 flex-1"
+        dataTour="opp-table"
         right={
           <label className="flex cursor-pointer items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted">
             <input
