@@ -33,8 +33,24 @@ def backfill(
     from screener.pipeline import run_backfill
 
     ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()] or None
-    with audited_run("backfill"):
-        run_backfill(tickers=ticker_list, skip_sentiment=skip_sentiment)
+    # pasar `progress` permite que la barra del dashboard refleje también las
+    # ejecuciones por CLI y por la tarea programada de Windows
+    with audited_run("backfill") as progress:
+        run_backfill(tickers=ticker_list, skip_sentiment=skip_sentiment, progress=progress)
+
+
+@app.command("refresh-universe")
+def refresh_universe_cmd(
+    force: bool = typer.Option(False, help="Forzar aunque el cache sea reciente"),
+) -> None:
+    """Actualiza los constituyentes de S&P 500 + NASDAQ 100 (altas/bajas)."""
+    from screener.universe import refresh_universe
+
+    changes = refresh_universe(force=force, max_age_days=0 if force else 7)
+    typer.echo(
+        f"Universo: {changes.get('count', '?')} tickers | "
+        f"+{len(changes['added'])} altas / -{len(changes['removed'])} bajas"
+    )
 
 
 @app.command()
@@ -42,8 +58,8 @@ def build_dataset() -> None:
     """Construye el dataset de entrenamiento PIT (features + labels) en parquet."""
     from screener.pipeline import run_build_dataset
 
-    with audited_run("build-dataset"):
-        run_build_dataset()
+    with audited_run("build-dataset") as progress:
+        run_build_dataset(progress=progress)
 
 
 @app.command()
@@ -51,8 +67,8 @@ def train() -> None:
     """Entrena el modelo táctico, optimiza el umbral y lo registra."""
     from screener.pipeline import run_train
 
-    with audited_run("train"):
-        run_train()
+    with audited_run("train") as progress:
+        run_train(progress=progress)
 
 
 @app.command()
@@ -60,8 +76,8 @@ def score() -> None:
     """Genera señales del día con el modelo activo (sin refrescar datos)."""
     from screener.pipeline import run_score
 
-    with audited_run("score"):
-        run_score()
+    with audited_run("score") as progress:
+        run_score(progress=progress)
 
 
 @app.command("run-daily")
@@ -69,8 +85,8 @@ def run_daily() -> None:
     """Pipeline diario completo: ingesta incremental, señales, portafolio y drift."""
     from screener.pipeline import run_daily_pipeline
 
-    with audited_run("daily"):
-        run_daily_pipeline()
+    with audited_run("daily") as progress:
+        run_daily_pipeline(progress=progress)
 
 
 @app.command()
@@ -78,8 +94,8 @@ def drift() -> None:
     """Chequeo de deriva de datos y de predicciones."""
     from screener.pipeline import run_drift
 
-    with audited_run("drift"):
-        run_drift()
+    with audited_run("drift") as progress:
+        run_drift(progress=progress)
 
 
 @app.command()

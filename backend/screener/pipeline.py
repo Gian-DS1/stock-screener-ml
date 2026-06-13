@@ -90,6 +90,27 @@ def _filter_universe(tickers: list[str] | None) -> pd.DataFrame:
     return uni
 
 
+def _emit_universe_alert(changes: dict, log=print) -> None:
+    """Registra una alerta cuando cambian los constituyentes de los índices."""
+    added, removed = changes.get("added", []), changes.get("removed", [])
+    if not added and not removed:
+        return
+    from screener.db import Alert, get_session, init_db
+
+    parts = []
+    if added:
+        parts.append(f"entraron {len(added)}: {', '.join(added[:8])}{'…' if len(added) > 8 else ''}")
+    if removed:
+        parts.append(f"salieron {len(removed)}: {', '.join(removed[:8])}{'…' if len(removed) > 8 else ''}")
+    init_db()
+    with get_session() as session:
+        session.add(Alert(
+            type="UNIVERSO",
+            message="Cambios en los índices — " + " · ".join(parts),
+            severity="info",
+        ))
+
+
 def run_backfill(
     tickers: list[str] | None = None,
     skip_sentiment: bool = False,
@@ -102,6 +123,17 @@ def run_backfill(
     from screener.ingest.prices import update_prices
 
     ensure_dirs()
+
+    # En modo universo completo (no subset de prueba) se siguen las altas/bajas
+    # de los índices antes de descargar: los tickers nuevos entran solos a la
+    # ingesta incremental; los que salieron dejan de aparecer en el screening.
+    if tickers is None:
+        from screener.universe import refresh_universe
+
+        progress.update("Actualizando universo (índices)")
+        changes = refresh_universe(log=log)
+        _emit_universe_alert(changes, log=log)
+
     uni = _filter_universe(tickers)
     log(f"Universo: {len(uni)} tickers")
 

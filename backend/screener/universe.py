@@ -2,7 +2,12 @@
 
 El resultado se cachea en data/raw/universe.parquet. Los tickers se normalizan
 al formato de yfinance (BRK.B -> BRK-B); el mapeo a CIK usa el formato SEC (punto).
+
+El universo se refresca periódicamente (`refresh_universe`) para seguir las
+altas/bajas de los índices; el refresco es tolerante a fallos (si Wikipedia no
+responde, conserva el cache) y reporta qué tickers entraron y salieron.
 """
+import time
 from io import StringIO
 
 import pandas as pd
@@ -100,3 +105,41 @@ def load_universe(refresh: bool = False) -> pd.DataFrame:
     if refresh or not universe_path().exists():
         return build_universe()
     return pd.read_parquet(universe_path())
+
+
+def refresh_universe(log=print, max_age_days: int = 7, force: bool = False) -> dict:
+    """Reconstruye el universo desde Wikipedia/SEC si el cache está viejo.
+
+    Sigue las altas/bajas de los índices hacia adelante. Tolerante a fallos: si
+    el scraping falla, conserva el cache vigente (no rompe el pipeline diario).
+    Devuelve los tickers que entraron (`added`) y salieron (`removed`).
+
+    Nota: esto mantiene actualizado el universo de SCREENING. NO elimina el sesgo
+    de supervivencia del entrenamiento (los constituyentes históricos point-in-time
+    no son gratuitos), que sigue siendo una limitación documentada.
+    """
+    path = universe_path()
+    prev = pd.read_parquet(path) if path.exists() else None
+    fresh = (
+        path.exists()
+        and not force
+        and (time.time() - path.stat().st_mtime) < max_age_days * 86_400
+    )
+    if fresh:
+        return {"refreshed": False, "added": [], "removed": [], "count": len(prev)}
+
+    try:
+        new = build_universe()
+    except Exception as exc:  # Wikipedia/SEC caídos: conservar el cache
+        log(f"  universo: refresco falló ({exc}); se mantiene el cache previo")
+        return {"refreshed": False, "added": [], "removed": [], "error": str(exc)}
+
+    prev_tickers = set(prev["ticker"]) if prev is not None else set()
+    new_tickers = set(new["ticker"])
+    added = sorted(new_tickers - prev_tickers)
+    removed = sorted(prev_tickers - new_tickers)
+    if added or removed:
+        log(f"  universo: +{len(added)} altas {added[:12]} / -{len(removed)} bajas {removed[:12]}")
+    else:
+        log(f"  universo: sin cambios ({len(new_tickers)} tickers)")
+    return {"refreshed": True, "added": added, "removed": removed, "count": len(new_tickers)}

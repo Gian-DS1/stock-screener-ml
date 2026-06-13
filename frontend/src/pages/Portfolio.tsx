@@ -19,6 +19,7 @@ const ALERT_TONE: Record<string, 'pos' | 'neg' | 'warn' | 'info' | 'muted'> = {
   TP_PARCIAL: 'pos',
   NUEVA_SENAL: 'info',
   DRIFT: 'warn',
+  UNIVERSO: 'info',
 }
 
 function RuleRow({ label, value, hit, hint }: { label: string; value: string; hit?: boolean; hint?: string }) {
