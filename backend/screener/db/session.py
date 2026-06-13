@@ -48,6 +48,33 @@ def init_db() -> None:
     engine = get_engine()
     Base.metadata.create_all(engine)
     _run_migrations(engine)
+    _reap_orphan_runs(engine)
+
+
+def _reap_orphan_runs(engine, stale_hours: int = 6) -> None:
+    """Marca como interrumpidos los runs 'running' demasiado viejos.
+
+    Un proceso matado a la fuerza (kill) nunca ejecuta el cierre de su
+    auditoría y deja el run 'running' para siempre, bloqueando el indicador de
+    actividad y el lanzamiento de nuevos jobs. El umbral (6h) supera cualquier
+    ejecución real —incluido el backfill histórico inicial— así que solo
+    alcanza a huérfanos genuinos.
+    """
+    from datetime import timedelta
+
+    from screener.db.models import utcnow
+
+    cutoff = utcnow() - timedelta(hours=stale_hours)
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "UPDATE runs SET status='interrupted', "
+                "detail=COALESCE(detail,'')||' [huérfano: proceso no finalizó]', "
+                "finished_at=:now "
+                "WHERE status='running' AND started_at < :cutoff"
+            ),
+            {"now": utcnow(), "cutoff": cutoff},
+        )
 
 
 @contextmanager
