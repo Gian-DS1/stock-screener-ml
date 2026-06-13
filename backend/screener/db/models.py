@@ -28,6 +28,11 @@ class Run(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)  # resumen o traceback
+    # Progreso en vivo (lo actualiza el pipeline durante la ejecución)
+    phase: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    progress_current: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    progress_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class Signal(Base):

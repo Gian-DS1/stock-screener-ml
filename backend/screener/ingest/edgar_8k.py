@@ -100,7 +100,7 @@ def _download_text(row: dict) -> str:
         return ""
 
 
-def update_8k_filings(universe: pd.DataFrame, log=print) -> pd.DataFrame | None:
+def update_8k_filings(universe: pd.DataFrame, log=print, progress=None) -> pd.DataFrame | None:
     """Añade los 8-K nuevos de cada empresa del universo (incremental)."""
     ensure_dirs()
     existing = load_filings()
@@ -121,6 +121,8 @@ def update_8k_filings(universe: pd.DataFrame, log=print) -> pd.DataFrame | None:
             log(f"  8-K: fallo listando {row.ticker}: {exc}")
         if n % 100 == 0:
             log(f"  8-K: listados {n}/{len(targets)} ({len(new_rows)} nuevos)")
+            if progress:
+                progress.update("Listando 8-K por empresa", n, len(targets))
 
     if not new_rows:
         log("  8-K: sin filings nuevos")
@@ -143,6 +145,8 @@ def update_8k_filings(universe: pd.DataFrame, log=print) -> pd.DataFrame | None:
         done += len(batch)
         accumulated = _persist_batch(accumulated, batch)
         log(f"  8-K: texto {done}/{total} (guardado parcial: {len(accumulated):,} filings)")
+        if progress:
+            progress.update("Descargando texto de 8-K", done, total)
 
     log(f"  8-K: total {len(accumulated):,} filings de {accumulated['ticker'].nunique()} empresas")
     return accumulated

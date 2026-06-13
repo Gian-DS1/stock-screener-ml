@@ -31,7 +31,7 @@ def _load_finbert():
     return tokenizer, model, device
 
 
-def process_pending_filings(log=print) -> None:
+def process_pending_filings(log=print, progress=None) -> None:
     """Puntúa con FinBERT los filings que aún no tienen sentimiento."""
     import torch
 
@@ -65,6 +65,8 @@ def process_pending_filings(log=print) -> None:
             results[start : start + len(batch), 2] = probs[:, i_neu]
             if (start // _BATCH) % 20 == 0 and start > 0:
                 log(f"  sentimiento: {start}/{len(texts)}")
+                if progress:
+                    progress.update("Analizando sentimiento (FinBERT)", start, len(texts))
 
     filings.loc[indices, "sent_pos"] = results[:, 0]
     filings.loc[indices, "sent_neg"] = results[:, 1]

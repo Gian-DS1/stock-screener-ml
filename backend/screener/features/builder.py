@@ -141,21 +141,26 @@ class FeatureAssembler:
         if sent is not None:
             df = df.join(sent.reindex(df.index))
 
-        # Dimensiones sin datos aún (p.ej. macro sin API key, sentimiento en fase
-        # posterior) quedan NaN: HistGradientBoosting las maneja nativamente.
-        missing = [c for c in ALL_FEATURES if c not in df.columns]
+        # Cualquier columna sin datos para este ticker queda NaN: HGB la maneja
+        # nativamente. Incluye features (macro sin key, sentimiento pendiente) y
+        # auxiliares que dependen de snapshots ausentes (p.ej. shares_change_yoy
+        # en empresas sin histórico suficiente de acciones para el YoY).
+        keep = list(dict.fromkeys(ALL_FEATURES + AUX_COLUMNS))
+        missing = [c for c in keep if c not in df.columns]
         if missing:
             df[missing] = np.nan
 
-        keep = ALL_FEATURES + [c for c in AUX_COLUMNS if c not in ALL_FEATURES]
-        return df[[c for c in dict.fromkeys(keep)]]
+        return df[keep]
 
 
-def build_training_dataset(log=print) -> pd.DataFrame:
+def build_training_dataset(log=print, progress=None) -> pd.DataFrame:
     ensure_dirs()
     asm = FeatureAssembler(log=log)
     frames = []
-    for row in asm.universe.itertuples():
+    total = len(asm.universe)
+    for n, row in enumerate(asm.universe.itertuples(), 1):
+        if progress and n % 50 == 0:
+            progress.update("Construyendo dataset", n, total)
         df = asm.ticker_frame(row.ticker, row.yf_ticker)
         if df is None:
             continue

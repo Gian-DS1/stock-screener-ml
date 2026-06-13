@@ -62,6 +62,13 @@ body {
 }
 .slide-in { animation: slide-in 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
 
+/* barra de progreso indeterminada (fase sin total conocido) */
+@keyframes indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.indeterminate { animation: indeterminate 1.4s ease-in-out infinite; }
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #232e3a; border-radius: 5px; }

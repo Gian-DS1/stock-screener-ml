@@ -32,7 +32,7 @@ export default function Health() {
   const { data, isLoading } = useHealth()
   const { data: status } = usePipelineStatus()
   const trigger = usePipelineTrigger()
-  const running = status?.running ?? null
+  const running = status?.running?.kind ?? null
 
   if (isLoading || !data) return <Spinner label="leyendo diagnósticos" />
   const m = data.model

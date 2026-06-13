@@ -242,11 +242,28 @@ export function useAlertMutation() {
 export const useHealth = () =>
   useQuery({ queryKey: ['health'], queryFn: () => api<HealthSummary>('/health/summary') })
 
+export interface PipelineStatus {
+  running: {
+    kind: string
+    phase: string | null
+    current: number | null
+    total: number | null
+    pct: number | null
+    started_at: string
+    updated_at: string | null
+  } | null
+  data_lake: {
+    filings_8k?: number
+    filings_8k_scored?: number
+    tickers_with_prices?: number
+  }
+}
+
 export const usePipelineStatus = () =>
   useQuery({
     queryKey: ['pipeline-status'],
-    queryFn: () => api<{ running: string | null }>('/pipeline/status'),
-    refetchInterval: 5_000,
+    queryFn: () => api<PipelineStatus>('/pipeline/status'),
+    refetchInterval: (q) => (q.state.data?.running ? 2_000 : 8_000),
   })
 
 export function usePipelineTrigger() {

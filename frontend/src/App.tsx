@@ -5,6 +5,7 @@ import { useAlerts, usePipelineStatus, usePipelineTrigger } from './lib/api'
 import Opportunities from './pages/Opportunities'
 import Portfolio from './pages/Portfolio'
 import Health from './pages/Health'
+import PipelineProgress from './components/PipelineProgress'
 
 const TABS = [
   { to: '/oportunidades', label: 'Oportunidades' },
@@ -16,7 +17,7 @@ export default function App() {
   const { data: status } = usePipelineStatus()
   const { data: alerts } = useAlerts(true)
   const trigger = usePipelineTrigger()
-  const running = status?.running ?? null
+  const running = status?.running?.kind ?? null
   const unread = alerts?.length ?? 0
 
   return (
@@ -79,6 +80,8 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      <PipelineProgress />
 
       <main className="flex-1">
         <Routes>

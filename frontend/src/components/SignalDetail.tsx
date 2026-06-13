@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Area, AreaChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ComposedChart } from 'recharts'
+import { Area, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ComposedChart } from 'recharts'
 import { ExternalLink, X } from 'lucide-react'
 import { useChart, useNews, useSignalStatus, type Signal } from '../lib/api'
 import { featureLabel, fmtDate, fmtSignedPct, fmtUsd } from '../lib/format'
