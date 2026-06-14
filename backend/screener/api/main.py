@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from screener.api.routers import health, pipeline, portfolio, signals
+from screener.api.routers import favorites, health, pipeline, portfolio, signals
 from screener.config import PROJECT_ROOT
 from screener.db import init_db
 
@@ -25,6 +25,7 @@ def create_app() -> FastAPI:
     app.include_router(portfolio.router, prefix="/api")
     app.include_router(health.router, prefix="/api")
     app.include_router(pipeline.router, prefix="/api")
+    app.include_router(favorites.router, prefix="/api")
 
     if FRONTEND_DIST.exists():
         app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")

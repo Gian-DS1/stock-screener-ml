@@ -18,6 +18,7 @@ const ALERT_TONE: Record<string, 'pos' | 'neg' | 'warn' | 'info' | 'muted'> = {
   TIME_LIMIT: 'warn',
   TP_PARCIAL: 'pos',
   NUEVA_SENAL: 'info',
+  FAVORITA_SENAL: 'warn',
   DRIFT: 'warn',
   UNIVERSO: 'info',
 }

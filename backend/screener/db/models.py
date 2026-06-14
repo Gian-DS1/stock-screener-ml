@@ -88,7 +88,7 @@ class Alert(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
-    type: Mapped[str] = mapped_column(String(20))  # STOP_LOSS | TRAILING | TIME_LIMIT | TP_PARCIAL | NUEVA_SENAL | DRIFT
+    type: Mapped[str] = mapped_column(String(20))  # STOP_LOSS | TRAILING | TIME_LIMIT | TP_PARCIAL | NUEVA_SENAL | FAVORITA_SENAL | DRIFT | UNIVERSO
     ticker: Mapped[str | None] = mapped_column(String(10), nullable=True)
     position_id: Mapped[int | None] = mapped_column(ForeignKey("positions.id"), nullable=True)
     message: Mapped[str] = mapped_column(Text)
@@ -113,6 +113,23 @@ class ModelRecord(Base):
     feature_names_json: Mapped[str] = mapped_column(Text)
     importances_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class Favorite(Base):
+    """Empresa que el usuario sigue: lista de seguimiento persistente.
+
+    Una favorita puede no ser compra hoy (está en observación), pero el sistema
+    avisa con una alerta destacada cuando finalmente dispara señal de compra.
+    """
+
+    __tablename__ = "favorites"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticker: Mapped[str] = mapped_column(String(10), unique=True, index=True)
+    company: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    sector: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    added_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
 class DriftReport(Base):

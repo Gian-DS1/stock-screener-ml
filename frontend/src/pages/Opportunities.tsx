@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronsUpDown, Eye, Search, Target } from 'lucide-react'
-import { useHealth, useSignals, useWatchlist, type Signal } from '../lib/api'
+import { ArrowDown, ArrowUp, ChevronsUpDown, Eye, Search, Star, Target } from 'lucide-react'
+import { useFavorites, useHealth, useSignals, useWatchlist, type Signal } from '../lib/api'
 import { fmtDate, fmtSignedPct, fmtUsd } from '../lib/format'
 import { Empty, Panel, ProbBar, QualityGauge, Spinner, Tag } from '../components/ui'
 import SignalDetail from '../components/SignalDetail'
+import FavoriteStar from '../components/FavoriteStar'
 import clsx from 'clsx'
 
 type SortKey =
@@ -36,6 +37,8 @@ export default function Opportunities() {
   const [sector, setSector] = useState('')
   const [minProb, setMinProb] = useState(0)
   const [minQuality, setMinQuality] = useState(0)
+  const [onlyFavs, setOnlyFavs] = useState(false)
+  const { data: favorites } = useFavorites()
   const threshold = health?.model?.threshold
 
   const isWatch = mode === 'watch'
@@ -66,6 +69,7 @@ export default function Opportunities() {
     if (sector) list = list.filter((s) => s.sector === sector)
     if (minProb > 0) list = list.filter((s) => s.probability * 100 >= minProb)
     if (minQuality > 0) list = list.filter((s) => s.quality_score >= minQuality)
+    if (onlyFavs) list = list.filter((s) => favorites?.set.has(s.ticker))
 
     const dir = sortDir === 'asc' ? 1 : -1
     return [...list].sort((a, b) => {
@@ -75,7 +79,7 @@ export default function Opportunities() {
         return dir * String(av ?? '').localeCompare(String(bv ?? ''))
       return dir * ((av ?? -Infinity) - (bv ?? -Infinity))
     })
-  }, [source, isWatch, showDismissed, search, sector, minProb, minQuality, effectiveSortKey, sortDir])
+  }, [source, isWatch, showDismissed, search, sector, minProb, minQuality, onlyFavs, favorites, effectiveSortKey, sortDir])
 
   const total = isWatch
     ? (source ?? []).length
@@ -154,9 +158,19 @@ export default function Opportunities() {
             Calidad ≥
             <input type="number" min={0} max={100} value={minQuality || ''} onChange={(e) => setMinQuality(Number(e.target.value) || 0)} className={num} placeholder="0" />
           </label>
-          {(search || sector || minProb || minQuality) && (
+          <button
+            onClick={() => setOnlyFavs((v) => !v)}
+            className={clsx(
+              'flex items-center gap-1.5 border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors',
+              onlyFavs ? 'border-warn/40 bg-warn/10 text-warn' : 'border-edge text-muted hover:text-fg',
+            )}
+          >
+            <Star className="size-3" fill={onlyFavs ? 'currentColor' : 'none'} />
+            Solo favoritas{favorites?.list.length ? ` (${favorites.list.length})` : ''}
+          </button>
+          {(search || sector || minProb || minQuality || onlyFavs) && (
             <button
-              onClick={() => { setSearch(''); setSector(''); setMinProb(0); setMinQuality(0) }}
+              onClick={() => { setSearch(''); setSector(''); setMinProb(0); setMinQuality(0); setOnlyFavs(false) }}
               className="font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
             >
               limpiar
@@ -215,8 +229,11 @@ export default function Opportunities() {
                   style={{ animationDelay: `${Math.min(i * 25, 300)}ms` }}
                 >
                   <td className="px-4 py-2.5">
-                    <div className="font-mono font-semibold text-fg">{s.ticker}</div>
-                    <div className="max-w-[180px] truncate text-xs text-muted">{s.company}</div>
+                    <div className="flex items-center gap-1.5">
+                      <FavoriteStar ticker={s.ticker} company={s.company} sector={s.sector} size={14} />
+                      <span className="font-mono font-semibold text-fg">{s.ticker}</span>
+                    </div>
+                    <div className="ml-[22px] max-w-[180px] truncate text-xs text-muted">{s.company}</div>
                   </td>
                   <td className="px-2 py-2.5 text-xs text-muted">{s.sector ?? '—'}</td>
                   <td className="px-2 py-2.5">

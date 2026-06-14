@@ -6,6 +6,7 @@ import { featureLabel, fmtDate, fmtSignedPct, fmtUsd } from '../lib/format'
 import { Button, Panel, Spinner, Tag } from './ui'
 import AddPositionModal from './AddPositionModal'
 import InfoTip from './InfoTip'
+import FavoriteStar from './FavoriteStar'
 import clsx from 'clsx'
 
 export default function SignalDetail({ signal, onClose }: { signal: Signal; onClose: () => void }) {
@@ -34,7 +35,10 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
           {/* cabecera */}
           <div>
             <div className="flex items-baseline justify-between">
-              <span className="font-mono text-lg font-semibold">{signal.ticker}</span>
+              <span className="flex items-center gap-2">
+                <FavoriteStar ticker={signal.ticker} company={signal.company} sector={signal.sector} size={18} />
+                <span className="font-mono text-lg font-semibold">{signal.ticker}</span>
+              </span>
               <span className="tnum text-lg">{fmtUsd(signal.price)}</span>
             </div>
             <div className="flex items-center justify-between text-xs text-muted">

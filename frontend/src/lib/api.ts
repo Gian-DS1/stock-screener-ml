@@ -248,6 +248,37 @@ export function useAlertMutation() {
   }
 }
 
+export interface Favorite {
+  ticker: string
+  company: string | null
+  sector: string | null
+  note: string | null
+  added_at: string
+}
+
+export const useFavorites = () =>
+  useQuery({
+    queryKey: ['favorites'],
+    queryFn: () => api<Favorite[]>('/favorites'),
+    select: (rows) => ({ list: rows, set: new Set(rows.map((f) => f.ticker)) }),
+  })
+
+export function useFavoriteMutation() {
+  const qc = useQueryClient()
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['favorites'] })
+  return {
+    add: useMutation({
+      mutationFn: (body: { ticker: string; company?: string | null; sector?: string | null }) =>
+        api('/favorites', { method: 'POST', body: JSON.stringify(body) }),
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: (ticker: string) => api(`/favorites/${ticker}`, { method: 'DELETE' }),
+      onSuccess: invalidate,
+    }),
+  }
+}
+
 export const useHealth = () =>
   useQuery({ queryKey: ['health'], queryFn: () => api<HealthSummary>('/health/summary') })
 

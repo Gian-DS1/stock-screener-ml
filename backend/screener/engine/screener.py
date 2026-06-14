@@ -19,7 +19,7 @@ import pandas as pd
 from sqlalchemy import select
 
 from screener.config import settings
-from screener.db import Alert, Position, Signal, get_session, init_db
+from screener.db import Alert, Favorite, Position, Signal, get_session, init_db
 from screener.features.builder import build_inference_frame, latest_path
 from screener.models.explain import explain_rows
 from screener.models.quality import quality_score
@@ -83,6 +83,7 @@ def generate_signals(log=print) -> list[dict]:
     created: list[dict] = []
     with get_session() as session:
         blocked = _cooldown_blocked_tickers(session, date.today())
+        favorites = set(session.execute(select(Favorite.ticker)).scalars().all())
         for (idx, row), shap_top in zip(candidates.iterrows(), explanations):
             if row["ticker"] in blocked:
                 continue
@@ -109,15 +110,17 @@ def generate_signals(log=print) -> list[dict]:
                 ),
             )
             session.add(signal)
+            is_fav = row["ticker"] in favorites
             session.add(Alert(
-                type="NUEVA_SENAL",
+                type="FAVORITA_SENAL" if is_fav else "NUEVA_SENAL",
                 ticker=row["ticker"],
                 message=(
-                    f"Nueva oportunidad: {row['ticker']} "
-                    f"(prob {row['probability']:.0%}, calidad {row['quality_score']:.0f}, "
+                    (f"⭐ Tu favorita {row['ticker']} disparó señal de compra "
+                     if is_fav else f"Nueva oportunidad: {row['ticker']} ")
+                    + f"(prob {row['probability']:.0%}, calidad {row['quality_score']:.0f}, "
                     f"{row['close'] / row['sma200'] - 1:+.1%} vs SMA200)"
                 ),
-                severity="info",
+                severity="warning" if is_fav else "info",
             ))
             created.append({"ticker": row["ticker"], "probability": float(row["probability"])})
 
