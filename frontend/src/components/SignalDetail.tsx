@@ -167,12 +167,29 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
             )}
           </div>
 
+          {/* por qué no es compra (solo en observación) */}
+          {signal.status === 'watch' && signal.reasons && signal.reasons.length > 0 && (
+            <div className="border border-info/30 bg-info/[0.06] p-3">
+              <h3 className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-info">
+                Por qué aún no es compra
+              </h3>
+              <ul className="space-y-1">
+                {signal.reasons.map((r, i) => (
+                  <li key={i} className="flex gap-1.5 text-xs leading-snug text-fg/90">
+                    <span className="text-info">•</span>
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* acciones */}
           <div data-tour="detalle-registrar" className="flex gap-2 border-t border-hairline pt-4">
             <Button tone="primary" className="flex-1" onClick={() => setShowBuy(true)}>
               Registrar posición
             </Button>
-            {signal.status !== 'dismissed' ? (
+            {signal.status === 'watch' ? null : signal.status !== 'dismissed' ? (
               <Button onClick={() => statusMutation.mutate({ id: signal.id, status: 'dismissed' })}>
                 Descartar
               </Button>

@@ -20,9 +20,10 @@ export interface Signal {
   price: number
   sma200: number | null
   pct_vs_sma200: number | null
-  status: 'new' | 'dismissed' | 'bought'
+  status: 'new' | 'dismissed' | 'bought' | 'watch'
   shap: ShapItem[]
   quality_breakdown: Record<string, number>
+  reasons?: string[]
 }
 
 export interface RuleState {
@@ -158,6 +159,14 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const useSignals = (days = 30) =>
   useQuery({ queryKey: ['signals', days], queryFn: () => api<Signal[]>(`/signals?days=${days}`) })
+
+export const useWatchlist = (enabled: boolean) =>
+  useQuery({
+    queryKey: ['watchlist'],
+    queryFn: () => api<Signal[]>(`/watchlist?limit=80`),
+    enabled,
+    staleTime: 120_000,
+  })
 
 export function useSignalStatus() {
   const qc = useQueryClient()

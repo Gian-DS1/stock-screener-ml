@@ -34,6 +34,14 @@ def _serialize(s: Signal) -> dict:
     }
 
 
+@router.get("/watchlist")
+def watchlist(limit: int = 80) -> list[dict]:
+    """Empresas de alta calidad que no dispararon señal (en observación)."""
+    from screener.engine.screener import build_watchlist
+
+    return build_watchlist(limit=limit)
+
+
 @router.get("/signals")
 def list_signals(days: int = 30, status: str = "") -> list[dict]:
     cutoff = date.today() - timedelta(days=days)
