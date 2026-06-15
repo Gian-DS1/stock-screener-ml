@@ -42,6 +42,18 @@ export default function Health() {
     .slice(0, 12)
   const maxImp = importances[0]?.[1] ?? 1
 
+  // recomendación explícita: qué botón pulsar según el estado actual
+  const anyDrift = !!data.drift.data?.drifted || !!data.drift.prediction?.drifted
+  const reco = !m
+    ? { tone: 'warn' as const, btn: 'Reentrenar modelo',
+        text: 'Aún no hay modelo entrenado. Pulsa “Reentrenar modelo” para crearlo por primera vez.' }
+    : anyDrift
+      ? { tone: 'neg' as const, btn: 'Reentrenar modelo',
+          text: 'Se detectó deriva: el mercado se alejó de lo que el modelo aprendió. Pulsa “Reentrenar modelo” para que vuelva a aprender con datos recientes y reajuste su umbral antes de confiar en nuevas señales.' }
+      : { tone: 'pos' as const, btn: 'Actualizar datos + señales',
+          text: 'El modelo está sano. Para tu rutina diaria solo necesitas “Actualizar datos + señales”. No hace falta reentrenar.' }
+  const recoTone = { neg: 'border-neg/40 bg-neg/[0.07] text-neg', warn: 'border-warn/40 bg-warn/[0.07] text-warn', pos: 'border-pos/40 bg-pos/[0.07] text-pos' }[reco.tone]
+
   return (
     <div className="space-y-4">
       {/* fila superior: modelo + drift */}
@@ -106,40 +118,61 @@ export default function Health() {
             <div className="space-y-3 p-4">
               <DriftLight label="Datos (34 features)" report={data.drift.data} />
               <DriftLight label="Predicciones (KS)" report={data.drift.prediction} />
-              <p className="text-[11px] leading-snug text-faint">
-                Si el mercado cambia de régimen, las distribuciones se alejan de las huellas de
-                entrenamiento y conviene reentrenar antes de confiar en las señales.
-              </p>
+              {/* recomendación explícita de qué hacer */}
+              <div className={clsx('border p-3', recoTone)}>
+                <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.15em]">
+                  ¿Qué debo hacer?
+                </p>
+                <p className="text-xs leading-snug text-fg/90">{reco.text}</p>
+              </div>
             </div>
           </Panel>
 
           <Panel title="Acciones">
-            <div className="flex flex-col gap-2 p-4">
-              <Button
-                tone="primary"
-                disabled={!!running}
-                onClick={() => trigger.mutate('run-daily')}
-                className="flex items-center justify-center gap-2"
-              >
-                <Database className="size-3.5" /> Actualizar datos + señales
-              </Button>
-              <Button
-                disabled={!!running}
-                onClick={() => trigger.mutate('build-dataset')}
-                className="flex items-center justify-center gap-2"
-              >
-                <Activity className="size-3.5" /> Reconstruir dataset
-              </Button>
-              <Button
-                disabled={!!running}
-                onClick={() => {
-                  if (confirm('¿Reentrenar el modelo? Tomará varios minutos.'))
-                    trigger.mutate('train')
-                }}
-                className="flex items-center justify-center gap-2"
-              >
-                <Brain className="size-3.5" /> Reentrenar modelo
-              </Button>
+            <div className="flex flex-col gap-3 p-4">
+              <div>
+                <Button
+                  tone="primary"
+                  disabled={!!running}
+                  onClick={() => trigger.mutate('run-daily')}
+                  className={clsx('flex w-full items-center justify-center gap-2', reco.btn === 'Actualizar datos + señales' && 'ring-2 ring-pos/50')}
+                >
+                  <Database className="size-3.5" /> Actualizar datos + señales
+                </Button>
+                <p className="mt-1 text-[11px] leading-snug text-faint">
+                  <strong className="text-muted">Tu rutina diaria.</strong> Descarga lo nuevo del mercado y
+                  recalcula las señales. Rápido. Úsalo una vez al día.
+                </p>
+              </div>
+              <div>
+                <Button
+                  disabled={!!running}
+                  onClick={() => trigger.mutate('build-dataset')}
+                  className="flex w-full items-center justify-center gap-2"
+                >
+                  <Activity className="size-3.5" /> Reconstruir dataset
+                </Button>
+                <p className="mt-1 text-[11px] leading-snug text-faint">
+                  Solo si cambió algo de fondo (nuevas variables, mucho histórico nuevo). Después
+                  conviene reentrenar. Casi nunca lo necesitas.
+                </p>
+              </div>
+              <div>
+                <Button
+                  disabled={!!running}
+                  onClick={() => {
+                    if (confirm('¿Reentrenar el modelo? Tomará varios minutos.'))
+                      trigger.mutate('train')
+                  }}
+                  className={clsx('flex w-full items-center justify-center gap-2', reco.btn === 'Reentrenar modelo' && 'ring-2 ring-neg/50')}
+                >
+                  <Brain className="size-3.5" /> Reentrenar modelo
+                </Button>
+                <p className="mt-1 text-[11px] leading-snug text-faint">
+                  <strong className="text-muted">Cuando hay deriva</strong> (semáforo rojo arriba) o cada
+                  pocos meses. Vuelve a aprender con datos recientes. Tarda varios minutos.
+                </p>
+              </div>
               {running && (
                 <p className="text-center font-mono text-[10px] uppercase tracking-wider text-warn">
                   ejecutando: {running}…
