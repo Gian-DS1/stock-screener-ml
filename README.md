@@ -1,5 +1,12 @@
 # Stock Screener
 
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-TypeScript-61DAFB?logo=react&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-42%20passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
 Stock screener personal impulsado por ML. Filosofía selectiva: **pocas
 oportunidades de altísima calidad** — empresas en descuento con potencial de
 crecimiento a mediano/largo plazo — en lugar de muchas señales de baja calidad.
@@ -96,3 +103,9 @@ Desarrollo frontend: `npm run dev` (proxy a :8000). Tests: `uv run pytest`.
   pierde el contexto de ciclo).
 
 > Uso personal. Las señales no son consejo financiero.
+
+## Licencia
+
+Distribuido bajo licencia [MIT](LICENSE). Proyecto de portafolio de
+ingeniería de datos — datos en tiempo real, pipeline Point-In-Time estricto,
+modelado ML con validación temporal y monitoreo de drift en producción.
