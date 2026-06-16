@@ -4,18 +4,27 @@ import { useHealth, usePipelineStatus, usePipelineTrigger } from '../lib/api'
 import { featureLabel, fmtDateTime, fmtPct } from '../lib/format'
 import { Button, Empty, Panel, Spinner, Stat, Tag } from '../components/ui'
 
-function DriftLight({ label, report }: {
+function DriftLight({ label, report, soft = false }: {
   label: string
   report?: { created_at: string; drifted: boolean; metric: number }
+  // soft: deriva informativa (ámbar), no degradación accionable. Se usa para la
+  // deriva de DATOS, que es esperable por el horizonte de 6 meses del label.
+  soft?: boolean
 }) {
-  const color = !report ? 'bg-faint' : report.drifted ? 'bg-neg' : 'bg-pos'
-  const text = !report ? 'sin datos' : report.drifted ? 'DERIVA DETECTADA' : 'estable'
+  const driftBg = soft ? 'bg-warn' : 'bg-neg'
+  const driftText = soft ? 'text-warn' : 'text-neg'
+  const color = !report ? 'bg-faint' : report.drifted ? driftBg : 'bg-pos'
+  const text = !report
+    ? 'sin datos'
+    : report.drifted
+      ? (soft ? 'DERIVA LEVE (INFORMATIVA)' : 'DERIVA DETECTADA')
+      : 'estable'
   return (
     <div className="flex items-center gap-3 border border-edge bg-panel-2/60 px-4 py-3">
       <span className={clsx('size-3 rounded-full', color, report?.drifted && 'pulse-dot')} />
       <div className="min-w-0">
         <div className="font-mono text-xs font-medium uppercase tracking-wider">{label}</div>
-        <div className={clsx('text-xs', report?.drifted ? 'text-neg' : 'text-muted')}>
+        <div className={clsx('text-xs', report?.drifted ? driftText : 'text-muted')}>
           {text}
           {report && (
             <span className="tnum ml-2 text-faint">
@@ -42,16 +51,24 @@ export default function Health() {
     .slice(0, 12)
   const maxImp = importances[0]?.[1] ?? 1
 
-  // recomendación explícita: qué botón pulsar según el estado actual
-  const anyDrift = !!data.drift.data?.drifted || !!data.drift.prediction?.drifted
+  // recomendación explícita: qué botón pulsar según el estado actual.
+  // La degradación ACCIONABLE es la deriva de PREDICCIONES (el output del
+  // modelo se aleja de lo aprendido). La deriva de DATOS es esperable por el
+  // horizonte de 6 meses del label y no se arregla reentrenando hasta que
+  // maduren datos nuevos: se muestra como aviso, no como rojo.
+  const predDrift = !!data.drift.prediction?.drifted
+  const dataDrift = !!data.drift.data?.drifted
   const reco = !m
     ? { tone: 'warn' as const, btn: 'Reentrenar modelo',
         text: 'Aún no hay modelo entrenado. Pulsa “Reentrenar modelo” para crearlo por primera vez.' }
-    : anyDrift
+    : predDrift
       ? { tone: 'neg' as const, btn: 'Reentrenar modelo',
-          text: 'Se detectó deriva: el mercado se alejó de lo que el modelo aprendió. Pulsa “Reentrenar modelo” para que vuelva a aprender con datos recientes y reajuste su umbral antes de confiar en nuevas señales.' }
-      : { tone: 'pos' as const, btn: 'Actualizar datos + señales',
-          text: 'El modelo está sano. Para tu rutina diaria solo necesitas “Actualizar datos + señales”. No hace falta reentrenar.' }
+          text: 'Las PREDICCIONES del modelo se alejaron de lo que aprendió: degradación real del output. Pulsa “Reentrenar modelo” para recuperar la calibración antes de confiar en nuevas señales.' }
+      : dataDrift
+        ? { tone: 'warn' as const, btn: 'Actualizar datos + señales',
+            text: 'Los inputs de mercado se movieron respecto al entrenamiento reciente. Es esperable: el modelo se entrena con datos cuyo retorno a 120 días ya maduró (~6 meses atrás), así que reentrenar hoy no cambia nada hasta que maduren datos nuevos. Las predicciones siguen estables: sigue tu rutina diaria con normalidad.' }
+        : { tone: 'pos' as const, btn: 'Actualizar datos + señales',
+            text: 'El modelo está sano. Para tu rutina diaria solo necesitas “Actualizar datos + señales”. No hace falta reentrenar.' }
   const recoTone = { neg: 'border-neg/40 bg-neg/[0.07] text-neg', warn: 'border-warn/40 bg-warn/[0.07] text-warn', pos: 'border-pos/40 bg-pos/[0.07] text-pos' }[reco.tone]
 
   return (
@@ -116,7 +133,7 @@ export default function Health() {
         <div className="space-y-4">
           <Panel dataTour="salud-drift" title="Deriva (drift)">
             <div className="space-y-3 p-4">
-              <DriftLight label="Datos (34 features)" report={data.drift.data} />
+              <DriftLight label="Datos (34 features)" report={data.drift.data} soft />
               <DriftLight label="Predicciones (KS)" report={data.drift.prediction} />
               {/* recomendación explícita de qué hacer */}
               <div className={clsx('border p-3', recoTone)}>
