@@ -115,6 +115,9 @@ export default function GuidedTour({ open, onClose }: { open: boolean; onClose: 
     if (!open) return
     const s = STEPS[index]
     targetRef.current = s.target
+    // Limpieza intencional del spotlight al cambiar de paso; el bucle de
+    // medición lo vuelve a calcular una vez el nuevo objetivo está en el DOM.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRect(null)
     if (s.route && window.location.pathname !== s.route) navigate(s.route)
     if (s.action === 'open-detail') {

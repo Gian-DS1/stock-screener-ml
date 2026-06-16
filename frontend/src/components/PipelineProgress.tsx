@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Activity, Clock } from 'lucide-react'
 import { usePipelineStatus } from '../lib/api'
 
@@ -20,23 +20,27 @@ export default function PipelineProgress() {
   const pct = Math.max(0, Math.min(100, run?.pct ?? 0))
 
   const [now, setNow] = useState(() => Date.now())
-  const deadlineRef = useRef<number | null>(null)
+  const [deadline, setDeadline] = useState<number | null>(null)
 
   // Recalcula el "momento estimado de fin" cuando llega nuevo progreso del poll.
+  // El deadline se deriva del avance real medido contra el reloj, así que solo
+  // puede calcularse al llegar datos asíncronos del servidor, no en el render.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!run) {
-      deadlineRef.current = null
+      setDeadline(null)
       return
     }
     const started = new Date(run.started_at + 'Z').getTime()
     const elapsed = Date.now() - started
     if (pct >= 3 && pct < 100 && elapsed > 3000) {
       const remainingMs = (elapsed * (100 - pct)) / pct
-      deadlineRef.current = Date.now() + remainingMs
+      setDeadline(Date.now() + remainingMs)
     } else if (pct >= 100) {
-      deadlineRef.current = Date.now()
+      setDeadline(Date.now())
     }
   }, [run, pct])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Tic cada segundo: hace que la cuenta atrás baje de forma fluida entre polls.
   useEffect(() => {
@@ -50,7 +54,7 @@ export default function PipelineProgress() {
   const started = new Date(run.started_at + 'Z').getTime()
   const elapsedSec = Math.max(0, Math.floor((now - started) / 1000))
   const remainingSec =
-    deadlineRef.current !== null ? Math.max(0, Math.floor((deadlineRef.current - now) / 1000)) : null
+    deadline !== null ? Math.max(0, Math.floor((deadline - now) / 1000)) : null
 
   return (
     <div className="border-b border-warn/30 bg-warn/[0.07]">

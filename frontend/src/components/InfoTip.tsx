@@ -40,7 +40,8 @@ export default function InfoTip({ metric }: { metric: string }) {
         onMouseLeave={hide}
         onClick={(e) => {
           e.stopPropagation()
-          pos ? hide() : show()
+          if (pos) hide()
+          else show()
         }}
         aria-label={`Qué significa: ${metric}`}
         className="inline-flex shrink-0 text-faint transition-colors hover:text-info"
