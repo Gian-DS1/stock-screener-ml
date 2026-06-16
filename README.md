@@ -4,7 +4,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-TypeScript-61DAFB?logo=react&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-42%20passing-brightgreen)
+[![CI](https://github.com/Gian-DS1/stock-screener-ml/actions/workflows/ci.yml/badge.svg)](https://github.com/Gian-DS1/stock-screener-ml/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 Stock screener personal impulsado por ML. Filosofía selectiva: **pocas
