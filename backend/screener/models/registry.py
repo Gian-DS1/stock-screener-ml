@@ -5,6 +5,7 @@ Aquí es seguro porque los artefactos los genera SIEMPRE este mismo sistema en
 models/ (uso personal, local); nunca se cargan modelos de terceros.
 """
 import json
+import ntpath
 from functools import lru_cache
 from pathlib import Path
 
@@ -13,6 +14,18 @@ from sqlalchemy import select, update
 
 from screener.config import settings
 from screener.db import ModelRecord, get_session, init_db
+
+
+def _basename(path: str) -> str:
+    """Nombre de fichero a partir de una ruta, sea cual sea su SO de origen.
+
+    `pathlib.Path(...).name` solo separa por el delimitador del SO actual: en
+    Linux (CI, contenedores) una ruta de un registro antiguo entrenado en
+    Windows ("C:\\...\\modelo.joblib") no tiene ninguna barra normal, así que
+    `.name` devuelve la ruta completa en vez del nombre. `ntpath.basename`
+    reconoce ambos separadores en cualquier plataforma.
+    """
+    return ntpath.basename(path)
 
 
 def resolve_model_path(model_path: str) -> Path:
@@ -25,7 +38,7 @@ def resolve_model_path(model_path: str) -> Path:
     candidate = Path(model_path)
     if candidate.is_file():
         return candidate
-    return settings.models_dir / candidate.name
+    return settings.models_dir / _basename(model_path)
 
 
 def register_model(
@@ -41,7 +54,7 @@ def register_model(
     with get_session() as session:
         session.execute(update(ModelRecord).values(active=False))
         record = ModelRecord(
-            model_path=Path(model_path).name,
+            model_path=_basename(model_path),
             threshold=threshold,
             horizon_days=settings.prediction_horizon_days,
             min_return=settings.min_return_target,
