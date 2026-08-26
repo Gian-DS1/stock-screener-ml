@@ -17,11 +17,11 @@ import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
-# algunos 8-K antiguos son XML; el parser HTML los maneja suficientemente bien
-warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
-
 from screener.config import ensure_dirs, settings
 from screener.ingest.sec import sec_get
+
+# algunos 8-K antiguos son XML; el parser HTML los maneja suficientemente bien
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/{name}"
 ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/{doc}"
@@ -140,7 +140,7 @@ def update_8k_filings(universe: pd.DataFrame, log=print, progress=None) -> pd.Da
         batch = new_rows[batch_start : batch_start + _SAVE_BATCH]
         with ThreadPoolExecutor(max_workers=_TEXT_WORKERS) as pool:
             texts = list(pool.map(_download_text, batch))
-        for row, text in zip(batch, texts):
+        for row, text in zip(batch, texts, strict=True):
             row["text"] = text
         done += len(batch)
         accumulated = _persist_batch(accumulated, batch)

@@ -32,9 +32,13 @@ def _load_finbert():
 
 
 def process_pending_filings(log=print, progress=None) -> None:
-    """Puntúa con FinBERT los filings que aún no tienen sentimiento."""
-    import torch
+    """Puntúa con FinBERT los filings que aún no tienen sentimiento.
 
+    El extra `sentiment` (torch + transformers) es opcional: sin él el paso se
+    omite en vez de abortar el pipeline, igual que hace la macro cuando FRED
+    no responde. Las features de sentimiento quedan a NaN y el modelo entrena
+    sin ellas.
+    """
     filings = load_filings()
     if filings is None or filings.empty:
         log("  sentimiento: no hay filings descargados")
@@ -44,7 +48,18 @@ def process_pending_filings(log=print, progress=None) -> None:
         log("  sentimiento: nada pendiente")
         return
 
-    tokenizer, model, device = _load_finbert()
+    try:
+        import torch
+
+        tokenizer, model, device = _load_finbert()
+    except ImportError:
+        log(
+            "  sentimiento: omitido (falta el extra 'sentiment': "
+            "uv sync --extra sentiment)"
+        )
+        build_sentiment_daily(log=log)
+        return
+
     log(f"  sentimiento: procesando {len(pending):,} filings en {device}")
     # orden de labels de ProsusAI/finbert: positive, negative, neutral
     label_index = {v.lower(): k for k, v in model.config.id2label.items()}
@@ -107,7 +122,7 @@ def aggregate_daily(scored: pd.DataFrame, end: pd.Timestamp) -> pd.DataFrame:
         frames.append(out.reset_index().rename(columns={"index": "date"}))
 
     daily = pd.concat(frames, ignore_index=True)
-    return daily[["ticker", "date"] + SENTIMENT_FEATURES]
+    return daily[["ticker", "date", *SENTIMENT_FEATURES]]
 
 
 def build_sentiment_daily(log=print) -> pd.DataFrame | None:

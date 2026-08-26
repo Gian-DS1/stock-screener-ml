@@ -41,7 +41,7 @@ def test_nunca_retrocede_aunque_baje_el_subprogreso():
     # una fase posterior que reporta frac 0 no debe bajar el global
     v = p.overall_pct("Analizando sentimiento (FinBERT)")
     assert v >= 0
-    assert p.last_overall >= int(round(100 * (1 + 6 + 8 + 1) / sum(w for _, w in PHASE_PLANS["backfill"]) * 0))  # sanity
+    assert p.last_overall >= round(100 * (1 + 6 + 8 + 1) / sum(w for _, w in PHASE_PLANS["backfill"]) * 0)  # sanity
     # explícito: tras 90% del 8-K, el global no cae
     assert v >= 70
 

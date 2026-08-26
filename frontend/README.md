@@ -1,73 +1,50 @@
-# React + TypeScript + Vite
+# Frontend — dashboard del Stock Screener
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SPA en React 19 + TypeScript que consume la API de FastAPI. En producción no se
+sirve por separado: `npm run build` genera `dist/`, y el backend lo monta como
+estático en `http://localhost:8000`.
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | servidor de desarrollo en `:5173` con proxy de `/api` a `:8000` |
+| `npm run build` | chequeo de tipos (`tsc -b`) + bundle de producción en `dist/` |
+| `npm run lint` | ESLint (incluye `react-hooks` y `react-refresh`) |
+| `npm run preview` | sirve el `dist/` ya compilado |
 
-## React Compiler
+Para desarrollar necesitas el backend corriendo aparte:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd backend && uv run uvicorn screener.api.main:app --port 8000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Estructura
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── App.tsx              # layout, navegación por pestañas y estado del pipeline
+├── pages/
+│   ├── Opportunities.tsx  # señales del día + watchlist
+│   ├── Portfolio.tsx      # posiciones abiertas, alertas y reglas de salida
+│   └── Health.tsx         # métricas del modelo, drift y cobertura de datos
+├── components/
+│   ├── SignalDetail.tsx    # panel de detalle: gráfico, SHAP y desglose de calidad
+│   ├── PipelineProgress.tsx# barra de progreso en vivo del run diario
+│   ├── AddPositionModal.tsx
+│   ├── GuidedTour.tsx      # tour de onboarding (primera visita)
+│   ├── FavoriteStar.tsx · InfoTip.tsx · ui.tsx
+└── lib/
+    ├── api.ts           # hooks de TanStack Query, un hook por endpoint
+    ├── format.ts        # formateo de números, porcentajes y fechas
+    └── glossary.ts      # definiciones de cada métrica (tooltips explicativos)
+```
+
+## Convenciones
+
+- **Datos del servidor**: siempre vía TanStack Query (`src/lib/api.ts`). Ningún
+  componente hace `fetch` por su cuenta.
+- **Estilos**: Tailwind v4 con tokens semánticos definidos en `src/index.css`
+  (`pos`, `neg`, `warn`, `info`, `muted`, `edge`…), no colores literales.
+- **Sin jerga sin explicar**: toda métrica que se muestra tiene su entrada en
+  `glossary.ts` y se expone con `<InfoTip>`.

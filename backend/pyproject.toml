@@ -35,6 +35,7 @@ drift = [
 dev = [
     "pytest>=8.2",
     "httpx>=0.27",
+    "ruff>=0.14",
 ]
 
 # La RTX 5070 (Blackwell, sm_120) requiere builds de torch con CUDA 12.8+
@@ -55,3 +56,34 @@ packages = ["screener"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning:yfinance",
+    # starlette.testclient avisa de httpx2 en cada import; ruido en cada run
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "C4",   # comprehensions
+    "RUF",  # reglas propias de ruff
+]
+ignore = [
+    "E501",    # el formateo de líneas largas lo decide `ruff format`
+    "B008",    # Depends()/Query() en firmas: patrón normal en FastAPI
+    "RUF001",  # las cadenas en español usan tildes y comillas tipográficas
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["RUF059"]  # desempaquetados parciales en asserts

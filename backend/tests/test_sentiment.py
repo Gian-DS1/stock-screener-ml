@@ -1,8 +1,14 @@
 """El rezago PIT del sentimiento: un 8-K publicado el día D no puede ser
 visible para el modelo hasta el siguiente día hábil.
+
+También: el extra `sentiment` (torch + transformers) es opcional y su ausencia
+no puede tumbar el pipeline diario.
 """
+import builtins
+
 import pandas as pd
 
+from screener.features import sentiment as sentiment_mod
 from screener.features.sentiment import aggregate_daily
 
 
@@ -34,3 +40,30 @@ def test_days_since_crece_y_se_capa():
     assert daily.loc[pd.Timestamp("2024-01-08"), "days_since_8k"] == 0
     assert daily.loc[pd.Timestamp("2024-01-15"), "days_since_8k"] == 7
     assert daily["days_since_8k"].max() == 90  # capado
+
+
+def test_sin_torch_el_paso_se_omite_sin_romper(monkeypatch, capsys):
+    """Sin el extra `sentiment` instalado, process_pending_filings no revienta."""
+    filings = pd.DataFrame([
+        {
+            "ticker": "TEST",
+            "filing_date": pd.Timestamp("2024-01-08"),
+            "sent_score": float("nan"),
+            "text": "x" * 100,
+        }
+    ])
+    monkeypatch.setattr(sentiment_mod, "load_filings", lambda: filings)
+    monkeypatch.setattr(sentiment_mod, "build_sentiment_daily", lambda log=print: None)
+
+    real_import = builtins.__import__
+
+    def sin_torch(name, *args, **kwargs):
+        if name == "torch":
+            raise ImportError("No module named 'torch'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", sin_torch)
+
+    sentiment_mod.process_pending_filings()  # no debe lanzar
+
+    assert "omitido" in capsys.readouterr().out

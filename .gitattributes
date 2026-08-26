@@ -1,0 +1,15 @@
+# Normaliza los finales de línea: LF en el repo, nativos en el checkout.
+* text=auto eol=lf
+
+# Binarios: nunca tocar
+*.png   binary
+*.jpg   binary
+*.ico   binary
+*.svg   text eol=lf
+*.parquet binary
+*.joblib  binary
+*.db      binary
+
+# Excluir del cálculo de lenguajes de GitHub y de los diffs ruidosos
+frontend/package-lock.json  linguist-generated=true -diff
+backend/uv.lock             linguist-generated=true -diff

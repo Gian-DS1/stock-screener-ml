@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Area, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ComposedChart } from 'recharts'
+import { lazy, Suspense, useState } from 'react'
 import { ExternalLink, X } from 'lucide-react'
 import { useChart, useNews, useSignalStatus, type Signal } from '../lib/api'
 import { featureLabel, fmtDate, fmtSignedPct, fmtUsd } from '../lib/format'
@@ -8,6 +7,9 @@ import AddPositionModal from './AddPositionModal'
 import InfoTip from './InfoTip'
 import FavoriteStar from './FavoriteStar'
 import clsx from 'clsx'
+
+// recharts fuera del bundle inicial: solo se necesita al abrir este panel
+const PriceChart = lazy(() => import('./PriceChart'))
 
 export default function SignalDetail({ signal, onClose }: { signal: Signal; onClose: () => void }) {
   const { data: chart } = useChart(signal.ticker)
@@ -55,30 +57,9 @@ export default function SignalDetail({ signal, onClose }: { signal: Signal; onCl
             {chartData.length === 0 ? (
               <Spinner />
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData} margin={{ top: 6, right: 4, bottom: 0, left: 4 }}>
-                  <defs>
-                    <linearGradient id="close-fill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3ddc97" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#3ddc97" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" hide />
-                  <YAxis domain={['auto', 'auto']} hide />
-                  <Tooltip
-                    contentStyle={{
-                      background: '#11161d',
-                      border: '1px solid #1c242e',
-                      fontFamily: 'IBM Plex Mono',
-                      fontSize: 11,
-                    }}
-                    labelStyle={{ color: '#66788a' }}
-                    formatter={(v) => fmtUsd(Number(v))}
-                  />
-                  <Area type="monotone" dataKey="close" name="Cierre" stroke="#3ddc97" strokeWidth={1.5} fill="url(#close-fill)" dot={false} />
-                  <Line type="monotone" dataKey="sma200" name="SMA200" stroke="#ffb454" strokeWidth={1} strokeDasharray="4 3" dot={false} />
-                </ComposedChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<Spinner />}>
+                <PriceChart data={chartData} />
+              </Suspense>
             )}
           </div>
 

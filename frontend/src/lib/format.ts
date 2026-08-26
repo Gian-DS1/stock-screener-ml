@@ -10,10 +10,24 @@ export const fmtSignedPct = (v: number | null | undefined, digits = 1): string =
 export const fmtNum = (v: number | null | undefined, digits = 2): string =>
   v == null ? '—' : v.toLocaleString('en-US', { maximumFractionDigits: digits })
 
+/** Fecha de calendario (YYYY-MM-DD), no un instante.
+ *
+ * `new Date('2026-08-24')` la interpreta como medianoche UTC, así que al
+ * renderizarla en cualquier huso al oeste de Greenwich se mostraba el día
+ * anterior. Se construye la fecha en hora local para que el día no se mueva.
+ */
 export const fmtDate = (iso: string | null | undefined): string => {
   if (!iso) return '—'
-  const d = new Date(iso)
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  const d = ymd ? new Date(+ymd[1], +ymd[2] - 1, +ymd[3]) : new Date(iso)
   return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: '2-digit' })
+}
+
+/** Hoy en formato YYYY-MM-DD según el reloj local (no el UTC de toISOString). */
+export const todayIso = (now: Date = new Date()): string => {
+  const mm = `${now.getMonth() + 1}`.padStart(2, '0')
+  const dd = `${now.getDate()}`.padStart(2, '0')
+  return `${now.getFullYear()}-${mm}-${dd}`
 }
 
 export const fmtDateTime = (iso: string | null | undefined): string => {

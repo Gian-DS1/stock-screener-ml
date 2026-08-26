@@ -112,8 +112,13 @@ class FeatureAssembler:
         self.universe = load_universe()
         facts = load_fundamentals()
         snaps = build_snapshots(facts) if facts is not None else pd.DataFrame()
+        # NO simplificar a dict(snaps.groupby(...)): un GroupBy de pandas expone
+        # el atributo `keys` (aquí la cadena "ticker"), así que dict() intenta el
+        # protocolo de mappings y revienta con "'str' object is not callable".
         self.snaps_by_ticker = (
-            {t: g for t, g in snaps.groupby("ticker")} if not snaps.empty else {}
+            {t: g for t, g in snaps.groupby("ticker")}  # noqa: C416
+            if not snaps.empty
+            else {}
         )
         vix_prices = load_prices("^VIX")
         if vix_prices is None:

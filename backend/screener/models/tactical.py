@@ -9,7 +9,7 @@
   las predicciones out-of-fold agrupadas (filosofía selectiva).
 """
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import joblib
 import numpy as np
@@ -127,8 +127,8 @@ def train_tactical_model(log=print) -> dict:
     )
 
     # métricas por fold al umbral global (estabilidad temporal de la precisión)
-    for stat, (train_mask, val_mask, _) in zip(
-        fold_stats, _expanding_folds(df["date"], settings.cv_folds, gap)
+    for stat, (_train_mask, val_mask, _) in zip(
+        fold_stats, _expanding_folds(df["date"], settings.cv_folds, gap), strict=True
     ):
         probs = oof_probs[val_mask]
         pred = probs >= threshold
@@ -156,7 +156,7 @@ def train_tactical_model(log=print) -> dict:
         },
     }
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    stamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     model_path = settings.models_dir / f"tactical_{stamp}.joblib"
     artifact = {
         "model": final_model,
@@ -197,6 +197,6 @@ def _shap_importances(
         if isinstance(values, list):  # clasificadores binarios antiguos: [neg, pos]
             values = values[1]
         mean_abs = np.abs(values).mean(axis=0)
-        return {f: float(v) for f, v in zip(feature_names, mean_abs)}
+        return {f: float(v) for f, v in zip(feature_names, mean_abs, strict=True)}
     except Exception:
         return {}

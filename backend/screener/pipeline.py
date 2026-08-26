@@ -1,12 +1,11 @@
 """Orquestación de los flujos del sistema (invocados desde el CLI y la API)."""
 import traceback
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 import pandas as pd
 
-from screener.config import ensure_dirs, settings
-
+from screener.config import ensure_dirs
 
 # Plan de fases por tipo de run: (etiqueta, peso ≈ duración relativa). Permite
 # convertir "fase actual + sub-progreso" en un porcentaje GLOBAL 0-100 sobre el
@@ -64,7 +63,7 @@ class RunProgress:
         if total and total > 0 and current is not None:
             frac = max(0.0, min(1.0, current / total))
         acc = sum(self.weights[: self.idx]) + self.weights[self.idx] * frac
-        overall = int(round(100 * acc / self.total_w))
+        overall = round(100 * acc / self.total_w)
         # nunca retrocede y se reserva el 100% para el cierre del run
         overall = max(self.last_overall, min(overall, 99))
         self.last_overall = overall

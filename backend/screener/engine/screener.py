@@ -14,7 +14,6 @@ entrada (todos obligatorios):
 import json
 from datetime import date
 
-import numpy as np
 import pandas as pd
 from sqlalchemy import select
 
@@ -84,7 +83,7 @@ def generate_signals(log=print) -> list[dict]:
     with get_session() as session:
         blocked = _cooldown_blocked_tickers(session, date.today())
         favorites = set(session.execute(select(Favorite.ticker)).scalars().all())
-        for (idx, row), shap_top in zip(candidates.iterrows(), explanations):
+        for (idx, row), shap_top in zip(candidates.iterrows(), explanations, strict=True):
             if row["ticker"] in blocked:
                 continue
             signal_date = row["date"].date()
@@ -190,7 +189,7 @@ def build_watchlist(limit: int = 80, log=print) -> list[dict]:
     breakdown_rows = q_breakdown.loc[watch.index]
 
     out: list[dict] = []
-    for (idx, row), shap_top in zip(watch.iterrows(), explanations):
+    for (idx, row), shap_top in zip(watch.iterrows(), explanations, strict=True):
         sma200 = float(row["sma200"]) if pd.notna(row["sma200"]) else None
         out.append({
             "id": 0,  # no persistido: ítem de observación, no señal

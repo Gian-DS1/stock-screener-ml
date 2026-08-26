@@ -20,7 +20,7 @@ def _quarters(concept, quarters, values, filed_dates):
     """quarters: lista de (start, end)."""
     return [
         _facts_row(concept, s, e, v, f)
-        for (s, e), v, f in zip(quarters, values, filed_dates)
+        for (s, e), v, f in zip(quarters, values, filed_dates, strict=True)
     ]
 
 

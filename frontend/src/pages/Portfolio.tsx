@@ -23,6 +23,18 @@ const ALERT_TONE: Record<string, 'pos' | 'neg' | 'warn' | 'info' | 'muted'> = {
   UNIVERSO: 'info',
 }
 
+/** El tipo viaja como enum en la base de datos; aquí se muestra en español. */
+const ALERT_LABEL: Record<string, string> = {
+  STOP_LOSS: 'Stop loss',
+  TRAILING: 'Trailing stop',
+  TIME_LIMIT: 'Límite de tiempo',
+  TP_PARCIAL: 'Take profit parcial',
+  NUEVA_SENAL: 'Nueva señal',
+  FAVORITA_SENAL: 'Favorita dispara',
+  DRIFT: 'Drift',
+  UNIVERSO: 'Universo',
+}
+
 function RuleRow({ label, value, hit, hint }: { label: string; value: string; hit?: boolean; hint?: string }) {
   return (
     <div className="flex items-center justify-between border-b border-hairline/50 py-1 text-xs" title={hint}>
@@ -256,7 +268,7 @@ export default function Portfolio() {
                 className={clsx('cursor-pointer px-4 py-3 transition-colors hover:bg-panel-2', a.read && 'opacity-45')}
               >
                 <div className="mb-1 flex items-center gap-2">
-                  <Tag tone={ALERT_TONE[a.type] ?? 'muted'}>{a.type.replace('_', ' ')}</Tag>
+                  <Tag tone={ALERT_TONE[a.type] ?? 'muted'}>{ALERT_LABEL[a.type] ?? a.type.replace('_', ' ')}</Tag>
                   {!a.read && <Bell className="size-3 text-warn" />}
                   <span className="ml-auto font-mono text-[10px] text-faint">{fmtDateTime(a.created_at)}</span>
                 </div>

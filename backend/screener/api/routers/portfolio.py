@@ -67,12 +67,19 @@ def list_positions(status: str = "open") -> dict:
     warnings = []
     if len(open_positions) >= settings.max_positions:
         warnings.append(f"Límite de {settings.max_positions} posiciones alcanzado: no abrir más")
-    for p in open_positions:
-        if total_value > 0 and p["market_value"] / total_value > settings.max_concentration:
-            warnings.append(
-                f"{p['ticker']} concentra {p['market_value'] / total_value:.0%} "
-                f"(máximo {settings.max_concentration:.0%})"
-            )
+    # La concentración se mide sobre el capital YA invertido: con pocas
+    # posiciones abiertas pasar del 10% es aritméticamente inevitable (con 4
+    # posiciones cada una pesa ~25%). Avisar ahí sería ruido puro y va en contra
+    # de la filosofía selectiva del screener, así que el límite solo se evalúa
+    # cuando es alcanzable: a partir de 1/max_concentration posiciones.
+    min_positions = round(1 / settings.max_concentration)
+    if len(open_positions) >= min_positions:
+        for p in open_positions:
+            if total_value > 0 and p["market_value"] / total_value > settings.max_concentration:
+                warnings.append(
+                    f"{p['ticker']} concentra {p['market_value'] / total_value:.0%} "
+                    f"(máximo {settings.max_concentration:.0%})"
+                )
     return {
         "positions": positions,
         "total_value": total_value,

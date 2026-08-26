@@ -94,7 +94,7 @@ def _score_items(items: list[dict]) -> None:
                 headlines, truncation=True, max_length=64, padding=True, return_tensors="pt"
             ).to(device)
             probs = torch.softmax(model(**enc).logits, dim=-1).cpu().numpy()
-        for item, p in zip(items, probs):
+        for item, p in zip(items, probs, strict=True):
             item["sentiment"] = round(float(p[label_index["positive"]] - p[label_index["negative"]]), 3)
     except Exception:
         for item in items:

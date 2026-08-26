@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { usePortfolioMutation, useSignalStatus } from '../lib/api'
+import { todayIso } from '../lib/format'
 import { Button } from './ui'
 
 export default function AddPositionModal({
@@ -18,7 +19,7 @@ export default function AddPositionModal({
   const signalStatus = useSignalStatus()
   const [form, setForm] = useState({
     ticker: ticker ?? '',
-    opened_at: new Date().toISOString().slice(0, 10),
+    opened_at: todayIso(),
     entry_price: defaultPrice?.toFixed(2) ?? '',
     shares: '',
   })

@@ -37,7 +37,7 @@ def audit(log=print) -> dict:
         log("  ERROR: no existe el dataset; ejecuta build-dataset")
         return {"error": "sin dataset"}
     df = pd.read_parquet(dataset_path())
-    log(f"\n=== DATASET DE ENTRENAMIENTO ===")
+    log("\n=== DATASET DE ENTRENAMIENTO ===")
     log(f"  filas: {len(df):,} | tickers: {df['ticker'].nunique()} | positivos: {df['label'].mean():.1%}")
     log(f"  rango de fechas: {df['date'].min().date()} -> {df['date'].max().date()}")
 
@@ -71,7 +71,7 @@ def audit(log=print) -> dict:
     # ---- matriz de inferencia ----
     if latest_path().exists():
         latest = pd.read_parquet(latest_path())
-        log(f"\n=== MATRIZ DE INFERENCIA (hoy) ===")
+        log("\n=== MATRIZ DE INFERENCIA (hoy) ===")
         log(f"  tickers: {len(latest)}")
         live_low = {c: v for c, v in _coverage(latest, ALL_FEATURES).items() if v < 0.40}
         log(f"  features <40% cobertura en vivo: {live_low or 'ninguna'}")
@@ -107,7 +107,6 @@ def audit(log=print) -> dict:
 def _coherence_checks(df: pd.DataFrame, log) -> dict:
     """Comprobaciones de sanidad sobre ratios derivados."""
     out = {}
-    sample = df.dropna(subset=["pe_ttm", "close"]).head(5000)
 
     # PE debe ser positivo donde existe (definido solo con EPS>0)
     pe = df["pe_ttm"].dropna()

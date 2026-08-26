@@ -56,7 +56,7 @@ def _append(ticker: str, new_rows: pd.DataFrame) -> None:
 def update_prices(tickers: list[str], log=print) -> None:
     """Descarga lo que falte para cada ticker (full backfill la primera vez)."""
     ensure_dirs()
-    all_tickers = list(dict.fromkeys(tickers + [VIX_TICKER]))
+    all_tickers = list(dict.fromkeys([*tickers, VIX_TICKER]))
 
     # Agrupa por fecha de inicio requerida para poder descargar en lote
     by_start: dict[str, list[str]] = {}

@@ -10,7 +10,7 @@ Honestidad metodológica:
 
 Uso: python -m screener.cli backtest --start 2018-01-01
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -20,7 +20,12 @@ from screener.features import ALL_FEATURES
 from screener.features.builder import dataset_path
 from screener.ingest.prices import load_close_matrix
 from screener.models.quality import quality_score
-from screener.models.tactical import _expanding_folds, _make_model, optimize_threshold, _CALENDAR_PER_TRADING
+from screener.models.tactical import (
+    _CALENDAR_PER_TRADING,
+    _expanding_folds,
+    _make_model,
+    optimize_threshold,
+)
 from screener.universe import load_universe
 
 
@@ -98,7 +103,7 @@ def run_backtest(start: str = "2018-01-01", end: str | None = None, capital: flo
     log(f"  backtest: {len(candidates):,} señales candidatas históricas")
 
     uni = load_universe()
-    yf_map = dict(zip(uni["ticker"], uni["yf_ticker"]))
+    yf_map = dict(zip(uni["ticker"], uni["yf_ticker"], strict=True))
     closes = load_close_matrix([yf_map.get(t, t) for t in scored["ticker"].unique()])
     closes = closes.rename(columns={v: k for k, v in yf_map.items()})
     closes = closes.loc[(closes.index >= pd.Timestamp(start)) & (closes.index <= pd.Timestamp(end or "2100-01-01"))]

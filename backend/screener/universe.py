@@ -16,7 +16,12 @@ import requests
 from screener.config import ensure_dirs, settings
 
 SP500_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-NDX_URL = "https://en.wikipedia.org/wiki/Nasdaq-100"
+# Wikipedia movió la lista de constituyentes fuera del artículo "Nasdaq-100" a su
+# propia página; se intentan ambas por si vuelve a cambiar.
+NDX_URLS = (
+    "https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies",
+    "https://en.wikipedia.org/wiki/Nasdaq-100",
+)
 SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 
 _HEADERS = {"User-Agent": "Mozilla/5.0 (personal stock screener)"}
@@ -40,13 +45,38 @@ def _fetch_sp500() -> pd.DataFrame:
     raise RuntimeError("No se encontró la tabla de constituyentes del S&P 500 en Wikipedia")
 
 
+def _ndx_sector_column(cols: list[str]) -> str | None:
+    """Columna de sector del NASDAQ-100, por orden de preferencia.
+
+    La tabla clasifica por ICB, no por GICS: "ICB Industry" es el nivel
+    comparable al sector GICS del S&P 500, mientras que "ICB Subsector" es
+    mucho más fino ("Semiconductors"). Solo se usa como relleno para los
+    tickers que no están en el S&P 500, así que la mezcla de taxonomías se
+    limita a esos casos y nunca pisa un sector GICS existente.
+    """
+    for candidate in ("ICB Industry", "GICS Sector", "Sector"):
+        match = next((c for c in cols if c.startswith(candidate)), None)
+        if match:
+            return match
+    return None
+
+
 def _fetch_ndx() -> pd.DataFrame:
-    for table in _read_wiki_tables(NDX_URL):
-        cols = [str(c).strip() for c in table.columns]
-        ticker_col = next((c for c in cols if c in ("Ticker", "Symbol", "Ticker symbol")), None)
-        company_col = next((c for c in cols if c in ("Company", "Security")), None)
-        if ticker_col and company_col and len(table) > 50:
-            sector_col = next((c for c in cols if "Sector" in c), None)
+    errors = []
+    for url in NDX_URLS:
+        try:
+            tables = _read_wiki_tables(url)
+        except Exception as exc:  # página movida o Wikipedia caída: probar la siguiente
+            errors.append(f"{url}: {exc}")
+            continue
+        for table in tables:
+            cols = [str(c).strip() for c in table.columns]
+            ticker_col = next((c for c in cols if c in ("Ticker", "Symbol", "Ticker symbol")), None)
+            company_col = next((c for c in cols if c in ("Company", "Security")), None)
+            if not (ticker_col and company_col and len(table) > 50):
+                continue
+            table.columns = cols
+            sector_col = _ndx_sector_column(cols)
             df = table.rename(
                 columns={ticker_col: "ticker", company_col: "company"}
                 | ({sector_col: "sector"} if sector_col else {})
@@ -56,7 +86,11 @@ def _fetch_ndx() -> pd.DataFrame:
             df = df[["ticker", "company", "sector"]]
             df["in_ndx"] = True
             return df
-    raise RuntimeError("No se encontró la tabla de constituyentes del NASDAQ-100 en Wikipedia")
+        errors.append(f"{url}: sin tabla de constituyentes")
+    raise RuntimeError(
+        "No se encontró la tabla de constituyentes del NASDAQ-100 en Wikipedia: "
+        + " | ".join(errors)
+    )
 
 
 def _fetch_cik_map() -> pd.DataFrame:

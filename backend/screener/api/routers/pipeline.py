@@ -5,7 +5,6 @@ curso —dashboard, CLI o tarea programada de Windows— y su progreso granular.
 """
 import threading
 
-import pandas as pd
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
@@ -69,7 +68,7 @@ def _data_lake_snapshot() -> dict:
 
         filings = load_filings()
         if filings is not None:
-            snap["filings_8k"] = int(len(filings))
+            snap["filings_8k"] = len(filings)
             snap["filings_8k_scored"] = int(filings["sent_score"].notna().sum())
     except Exception:
         pass

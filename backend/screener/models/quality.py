@@ -40,7 +40,7 @@ QUALITY_INPUT_COLUMNS = [c[0] for c in _COMPONENTS]
 
 
 def _linear(x: pd.Series, worst: float, best: float, points: float, nan_credit: float) -> pd.Series:
-    if best > worst:
+    if best > worst:  # noqa: SIM108 — el bloque explícito documenta la inversión
         frac = (x - worst) / (best - worst)
     else:  # métrica invertida
         frac = (worst - x) / (worst - best)

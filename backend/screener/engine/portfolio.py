@@ -28,7 +28,7 @@ def check_exit_rules(
     """
     last = float(closes.iloc[-1])
     peak = float(max(closes.max(), entry_price))
-    days_held = int(len(closes))
+    days_held = len(closes)
     ret = last / entry_price - 1
     triggered: list[tuple[str, str]] = []
 
