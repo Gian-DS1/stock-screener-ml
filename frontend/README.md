@@ -40,6 +40,13 @@ src/
     └── glossary.ts      # definiciones de cada métrica (tooltips explicativos)
 ```
 
+## Dependencias ancladas
+
+`typescript` se mantiene en `~6.0.x` a propósito: `typescript-eslint` declara
+`peer typescript ">=4.8.4 <6.1.0"`, así que subir a TypeScript 7 rompe la
+resolución de `npm ci` por completo. Se desanclará cuando typescript-eslint
+publique soporte para la 7.
+
 ## Convenciones
 
 - **Datos del servidor**: siempre vía TanStack Query (`src/lib/api.ts`). Ningún
