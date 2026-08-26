@@ -20,6 +20,7 @@ const ALERT_TONE: Record<string, 'pos' | 'neg' | 'warn' | 'info' | 'muted'> = {
   NUEVA_SENAL: 'info',
   FAVORITA_SENAL: 'warn',
   DRIFT: 'warn',
+  REGIMEN: 'info',
   UNIVERSO: 'info',
 }
 
@@ -32,6 +33,7 @@ const ALERT_LABEL: Record<string, string> = {
   NUEVA_SENAL: 'Nueva señal',
   FAVORITA_SENAL: 'Favorita dispara',
   DRIFT: 'Drift',
+  REGIMEN: 'Cambio de régimen',
   UNIVERSO: 'Universo',
 }
 

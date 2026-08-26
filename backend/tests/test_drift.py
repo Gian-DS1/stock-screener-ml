@@ -125,3 +125,56 @@ def test_deriva_real_por_empresa_si_se_detecta():
     share, _ = compute_data_drift(reference, current, market_wide=MARKET_WIDE)
 
     assert share > 0.30
+
+
+# --- referencia de la deriva de predicciones --------------------------------
+#
+# La foto de inferencia es UN día. Compararla contra las OOF de todos los años
+# mezcla regímenes y marca deriva casi siempre, incluso con el modelo recién
+# reentrenado: es el mismo artefacto que ya se corrigió del lado de los datos.
+
+def test_recent_oof_recorta_a_las_ultimas_fechas():
+    from screener.drift import recent_oof
+
+    fechas = pd.to_datetime(
+        ["2020-01-01"] * 3 + ["2026-08-20", "2026-08-21", "2026-08-24"]
+    )
+    probs = np.array([0.1, 0.1, 0.1, 0.9, 0.9, 0.9])
+
+    recorte = recent_oof(probs, fechas, n_dates=3)
+
+    assert recorte.tolist() == [0.9, 0.9, 0.9]
+
+
+def test_recent_oof_con_menos_fechas_que_la_ventana_no_recorta():
+    from screener.drift import recent_oof
+
+    fechas = pd.to_datetime(["2026-08-20", "2026-08-21"])
+    probs = np.array([0.3, 0.7])
+
+    assert recent_oof(probs, fechas, n_dates=60).tolist() == [0.3, 0.7]
+
+
+def test_el_regimen_antiguo_no_dispara_deriva_contra_el_reciente():
+    """Un día normal comparado con su régimen reciente NO es deriva, aunque el
+    pool histórico completo sí lo marcaría."""
+    from scipy.stats import ks_2samp
+
+    from screener.drift import recent_oof
+
+    rng = np.random.default_rng(0)
+    antiguas = rng.normal(0.35, 0.05, 3000)   # régimen viejo, media baja
+    recientes = rng.normal(0.62, 0.05, 3000)  # régimen reciente
+    hoy = rng.normal(0.62, 0.05, 500)         # hoy se parece al reciente
+
+    fechas = pd.to_datetime(
+        [f"2020-01-0{i % 9 + 1}" for i in range(3000)]
+        + [f"2026-08-{i % 28 + 1:02d}" for i in range(3000)]
+    )
+    probs = np.concatenate([antiguas, recientes])
+
+    ks_completo = ks_2samp(probs, hoy).statistic
+    ks_reciente = ks_2samp(recent_oof(probs, fechas, n_dates=28), hoy).statistic
+
+    assert ks_completo > 0.4          # el pool entero marcaría deriva
+    assert ks_reciente < 0.1          # contra el régimen reciente, estable

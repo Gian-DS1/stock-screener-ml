@@ -17,19 +17,26 @@ def health_summary() -> dict:
             select(ModelRecord).where(ModelRecord.active).order_by(ModelRecord.id.desc())
         ).scalars().first()
 
+        # Solo cuentan los informes del modelo ACTIVO: la deriva se mide contra
+        # las distribuciones de referencia guardadas en el artefacto, así que un
+        # veredicto de un modelo anterior no describe al que está en uso. Tras
+        # reentrenar, el semáforo queda "sin datos" hasta el siguiente chequeo
+        # en vez de arrastrar la alarma del modelo viejo.
         drift_reports = {}
-        for kind in ("data", "prediction"):
-            report = session.execute(
-                select(DriftReport).where(DriftReport.kind == kind)
-                .order_by(DriftReport.id.desc())
-            ).scalars().first()
-            if report:
-                drift_reports[kind] = {
-                    "created_at": report.created_at.isoformat(),
-                    "drifted": report.drifted,
-                    "metric": report.metric,
-                    "detail": json.loads(report.detail_json) if report.detail_json else None,
-                }
+        if model is not None:
+            for kind in ("data", "prediction"):
+                report = session.execute(
+                    select(DriftReport)
+                    .where(DriftReport.kind == kind, DriftReport.model_id == model.id)
+                    .order_by(DriftReport.id.desc())
+                ).scalars().first()
+                if report:
+                    drift_reports[kind] = {
+                        "created_at": report.created_at.isoformat(),
+                        "drifted": report.drifted,
+                        "metric": report.metric,
+                        "detail": json.loads(report.detail_json) if report.detail_json else None,
+                    }
 
         runs = session.execute(select(Run).order_by(Run.id.desc()).limit(15)).scalars().all()
 

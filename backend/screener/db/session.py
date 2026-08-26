@@ -18,6 +18,11 @@ _MIGRATIONS = {
         "progress_total": "INTEGER",
         "updated_at": "DATETIME",
     },
+    # Los informes anteriores a esta columna quedan con model_id NULL: se
+    # tratan como "de un modelo desconocido" y no se muestran como vigentes.
+    "drift_reports": {
+        "model_id": "INTEGER REFERENCES model_registry(id)",
+    },
 }
 
 

@@ -12,7 +12,11 @@
       sus inputs más importantes. Se reporta aparte (no infla el share).
 - Deriva de PREDICCIONES: KS de las probabilidades actuales vs las OOF del
   entrenamiento. Un cambio estructural del mercado mueve esta distribución
-  antes de que las pérdidas lo hagan evidente.
+  antes de que las pérdidas lo hagan evidente. La referencia es la MISMA
+  ventana reciente que usa la deriva de datos: comparar la foto de un día
+  contra las OOF de todos los años mezcla regímenes y marca deriva casi
+  siempre, incluso recién reentrenado (el mismo artefacto que arriba, pero
+  del lado del output).
 
 Resultados en drift_reports + alerta en el dashboard si hay deriva.
 """
@@ -80,6 +84,19 @@ def recent_cross_section(dataset: pd.DataFrame, n_dates: int) -> pd.DataFrame:
     return dataset[pd.to_datetime(dataset["date"]).isin(last_dates)]
 
 
+def recent_oof(probs: np.ndarray, dates, n_dates: int) -> np.ndarray:
+    """Probabilidades out-of-fold de las últimas `n_dates` fechas.
+
+    Mismo razonamiento que `recent_cross_section`, aplicado al output: la foto
+    de inferencia es UN día, y compararla por KS contra las OOF de todos los
+    años mezcla regímenes y marca deriva casi siempre. Las dos comprobaciones
+    responden así a la misma pregunta: ¿se alejó del régimen reciente?
+    """
+    dates = pd.to_datetime(pd.Series(dates))
+    last_dates = sorted(dates.unique())[-n_dates:]
+    return np.asarray(probs)[dates.isin(last_dates).to_numpy()]
+
+
 def compute_data_drift(
     reference: pd.DataFrame,
     current: pd.DataFrame,
@@ -114,9 +131,11 @@ _RECENT_WINDOW_DATES = 60  # fechas-snapshot recientes que forman la referencia
 def run_drift_checks(log=print) -> dict:
     from screener.db import Alert, DriftReport, get_session, init_db
     from screener.features.builder import dataset_path, latest_path
-    from screener.models.registry import load_active_artifact
+    from screener.models.registry import get_active_record, load_active_artifact
 
     init_db()
+    record = get_active_record()
+    model_id = record.id if record is not None else None
     artifact = load_active_artifact()
     features = artifact["feature_names"]
     # Rango de entrenamiento COMPLETO para la novedad de mercado (¿extrapola?).
@@ -152,6 +171,15 @@ def run_drift_checks(log=print) -> dict:
     # --- deriva de predicciones ---
     probs = artifact["model"].predict_proba(current.to_numpy(dtype=float))[:, 1]
     oof = np.asarray(artifact["oof_probs"])
+    oof_dates = artifact.get("oof_dates")
+    if oof_dates is not None:
+        oof = recent_oof(oof, oof_dates, _RECENT_WINDOW_DATES)
+        log(f"  referencia predicciones: ventana reciente ({len(oof):,} OOF)")
+    else:
+        # artefactos entrenados antes de guardar las fechas: no hay forma de
+        # recortar la ventana, se usa el pool completo y se avisa del sesgo
+        log("  referencia predicciones: pool OOF completo (artefacto sin fechas; "
+            "reentrena para una comparación por régimen reciente)")
     stat, pvalue = ks_2samp(oof, probs)
     pred_drifted = bool(pvalue < _KS_PVALUE and stat > 0.15)
     log(f"  drift predicciones: KS={stat:.3f} p={pvalue:.4f} -> {'DERIVA' if pred_drifted else 'estable'}")
@@ -159,11 +187,12 @@ def run_drift_checks(log=print) -> dict:
     with get_session() as session:
         session.add(DriftReport(
             kind="data", drifted=data_drifted, metric=float(data_share),
-            detail_json=json.dumps(detail)[:8000],
+            detail_json=json.dumps(detail)[:8000], model_id=model_id,
         ))
         session.add(DriftReport(
             kind="prediction", drifted=pred_drifted, metric=float(stat),
             detail_json=json.dumps({"ks": float(stat), "p": float(pvalue)}),
+            model_id=model_id,
         ))
         # Graduado: la deriva de PREDICCIONES es la degradación accionable
         # (el output del modelo se aleja de lo aprendido) -> reentrenar. La de

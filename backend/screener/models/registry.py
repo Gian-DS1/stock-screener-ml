@@ -84,15 +84,30 @@ def get_active_record() -> ModelRecord | None:
         ).scalars().first()
 
 
-@lru_cache(maxsize=1)
-def load_active_artifact() -> dict:
-    record = get_active_record()
-    if record is None:
-        raise RuntimeError("No hay modelo entrenado: ejecuta `train` primero")
-    path = resolve_model_path(record.model_path)
+@lru_cache(maxsize=2)
+def _load_artifact(model_path: str) -> dict:
+    path = resolve_model_path(model_path)
     if not path.is_file():
         raise RuntimeError(
             f"El artefacto '{path.name}' no está en {settings.models_dir}. "
             "Vuelve a ejecutar `train` para regenerarlo."
         )
     return joblib.load(path)
+
+
+def load_active_artifact() -> dict:
+    """Carga el artefacto del modelo activo según el registro.
+
+    La caché se indexa por el fichero, no por el proceso: si el modelo se
+    reentrena desde el CLI o desde la tarea programada mientras la API sigue
+    viva, la siguiente llamada lee el registro nuevo y carga el artefacto
+    nuevo, en vez de servir el anterior hasta reiniciar el servidor.
+    """
+    record = get_active_record()
+    if record is None:
+        raise RuntimeError("No hay modelo entrenado: ejecuta `train` primero")
+    return _load_artifact(record.model_path)
+
+
+# se conserva la interfaz previa: register_model() invalida la caché al registrar
+load_active_artifact.cache_clear = _load_artifact.cache_clear

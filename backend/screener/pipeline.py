@@ -32,7 +32,8 @@ PHASE_PLANS: dict[str, list[tuple[str, float]]] = {
         ("Analizando sentimiento (FinBERT)", 12),
     ],
     "build-dataset": [("Construyendo dataset", 1)],
-    "train": [("Entrenando modelo", 1)],
+    # tras entrenar se recalcula la deriva para recalibrar el semáforo
+    "train": [("Entrenando modelo", 6), ("Chequeo de drift", 1)],
     "score": [("Generando señales", 1)],
     "drift": [("Chequeo de drift", 1)],
 }
@@ -235,6 +236,15 @@ def run_train(log=print, progress: RunProgress = NULL_PROGRESS) -> None:
     progress.update("Entrenando modelo")
     record = train_tactical_model(log=log)
     log(f"Modelo entrenado: umbral={record['threshold']:.3f}")
+
+    # Recalibrar es justo el objetivo de reentrenar: sin volver a medir, el
+    # dashboard seguiría mostrando la deriva del modelo ANTERIOR y pidiendo
+    # reentrenar en bucle. No bloqueante: si aún no hay matriz de inferencia
+    # (nunca se ejecutó `score`), el modelo ya quedó entrenado igualmente.
+    try:
+        run_drift(log=log, progress=progress)
+    except Exception as exc:
+        log(f"Drift check tras el entrenamiento falló (no bloqueante): {exc}")
 
 
 def run_score(log=print, progress: RunProgress = NULL_PROGRESS) -> None:

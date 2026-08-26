@@ -80,10 +80,12 @@ genera la evaluación diaria.
 ### Salud del modelo — la parte que casi nadie enseña
 
 Métricas por fold de la validación temporal, importancia de features, auditoría
-de cada ejecución del pipeline y semáforo de deriva. La captura es real: el
-modelo activo se entrenó hace más de dos meses y el sistema **está detectando
-deriva en sus predicciones** y pidiendo reentrenar. Eso es exactamente lo que
-debe hacer.
+de cada ejecución del pipeline y semáforo de deriva **graduado**: distingue la
+degradación accionable de la que no lo es. En la captura las predicciones están
+estables (verde) mientras los inputs de mercado se han movido (ámbar), y el
+panel dice explícitamente qué hacer — en este caso *no* reentrenar, porque con
+un horizonte de 120 días reentrenar hoy no aporta hasta que maduren datos
+nuevos.
 
 ![Página de salud del modelo](docs/images/salud.png)
 
@@ -172,12 +174,22 @@ evitan engañarse a uno mismo:
 - **Backtest honesto.** Usa probabilidades out-of-fold, entra al cierre del día
   hábil siguiente a la señal, y avisa en cada ejecución de que el universo
   actual introduce sesgo de supervivencia.
-- **Drift medido con cuidado.** Comparar por KS las features macro de un solo
-  día contra el panel multi-anual de entrenamiento da deriva casi siempre: es un
-  artefacto, no deriva real. El sistema separa las features *por empresa* (KS de
-  sección transversal) de las *de mercado* (novedad de régimen: ¿el valor de hoy
-  cae fuera del rango visto en entrenamiento?) y no mezcla ambas en el mismo
-  indicador.
+- **Drift medido con cuidado.** La foto de inferencia es una sección transversal
+  de **un solo día**, así que compararla por KS contra el panel multi-anual de
+  entrenamiento marca deriva casi siempre: es un artefacto, no degradación. El
+  sistema lo evita en los tres frentes:
+  - features *por empresa* → KS contra la **ventana reciente** (60 fechas), no
+    contra los años en bloque;
+  - features *de mercado* (macro, VIX) → son una constante ese día, así que no
+    admiten KS: se evalúan como novedad de régimen (¿el valor de hoy cae fuera
+    del rango de entrenamiento?) y se reportan aparte, sin inflar el indicador;
+  - *predicciones* → KS contra las probabilidades out-of-fold de **esa misma
+    ventana reciente**. Contra el pool completo, un día perfectamente normal
+    daba KS 0,194 (alarma) frente a 0,060 (estable) contra su propio régimen.
+- **Semáforo graduado.** La deriva de predicciones es la degradación accionable
+  y pide reentrenar; la de datos es esperable por el horizonte de 120 días del
+  label y reentrenar no la arregla hasta que maduren datos nuevos, así que se
+  muestra en ámbar como aviso. El dashboard dice cuál de las dos es y qué hacer.
 
 ---
 
@@ -327,7 +339,7 @@ Todos se invocan como `uv run python -m screener.cli <comando>` desde `backend/`
 ## Calidad
 
 ```bash
-cd backend  && uv run pytest -q && uv run ruff check .      # 60 tests + lint
+cd backend  && uv run pytest -q && uv run ruff check .      # 68 tests + lint
 cd frontend && npm run lint && npm test && npm run build    # ESLint + 7 tests + tsc
 ```
 
@@ -345,6 +357,9 @@ y que, si se rompen, no dan error sino resultados creíbles y falsos.
 | El drift no se dispara por artefactos de sección transversal | `test_drift.py` |
 | El aviso de concentración solo aparece cuando el límite es alcanzable | `test_portfolio_api.py` |
 | El registro de modelos sobrevive a mover o clonar el proyecto | `test_registry.py` |
+| Reentrenar desde el CLI invalida el modelo cacheado por la API | `test_registry.py` |
+| La deriva mostrada es la del modelo activo, nunca la de uno anterior | `test_health_drift.py` |
+| La deriva de predicciones se mide contra el régimen reciente, no contra todos los años | `test_drift.py` |
 | Recargar `/portafolio` sirve la SPA, pero `/api/*` sigue devolviendo JSON | `test_api.py` |
 | Las fechas de calendario no se desplazan un día en husos al oeste de UTC | `format.test.ts` |
 

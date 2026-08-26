@@ -49,3 +49,29 @@ def test_artefacto_ausente_devuelve_ruta_en_models_dir(models_dir):
 
     assert faltante == models_dir / "tactical_inexistente.joblib"
     assert not faltante.exists()
+
+
+def test_un_modelo_nuevo_invalida_la_cache(models_dir, monkeypatch):
+    """La API no puede servir el modelo viejo tras un reentrenamiento externo.
+
+    Si `train` corre en el CLI o en la tarea programada, el proceso de la API
+    no ejecuta `register_model` y por tanto nunca limpia su caché. Al indexarla
+    por el fichero del registro activo, la siguiente llamada ve el modelo nuevo.
+    """
+    import joblib
+
+    viejo = models_dir / "tactical_viejo.joblib"
+    nuevo = models_dir / "tactical_nuevo.joblib"
+    joblib.dump({"marca": "viejo"}, viejo)
+    joblib.dump({"marca": "nuevo"}, nuevo)
+
+    activo = {"model_path": viejo.name}
+    monkeypatch.setattr(
+        registry, "get_active_record", lambda: type("R", (), activo)()
+    )
+
+    assert registry.load_active_artifact()["marca"] == "viejo"
+
+    activo["model_path"] = nuevo.name  # otro proceso reentrenó y registró
+
+    assert registry.load_active_artifact()["marca"] == "nuevo"

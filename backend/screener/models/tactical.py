@@ -169,6 +169,10 @@ def train_tactical_model(log=print) -> dict:
         # huellas para el monitoreo de drift
         "reference_features": df[features].sample(min(len(df), 20_000), random_state=7),
         "oof_probs": oof_probs[oof_mask],
+        # fechas alineadas con oof_probs: permiten medir la deriva de
+        # predicciones contra el régimen RECIENTE en vez de contra el pool de
+        # todos los años, que hace parecer derivado cualquier día normal.
+        "oof_dates": df["date"].to_numpy()[oof_mask],
         "importances": importances,
     }
     joblib.dump(artifact, model_path)

@@ -143,7 +143,14 @@ class Favorite(Base):
 
 
 class DriftReport(Base):
-    """Resultado de cada chequeo de deriva de datos o de predicciones."""
+    """Resultado de cada chequeo de deriva de datos o de predicciones.
+
+    `model_id` ata el veredicto al modelo que lo produjo: la deriva se mide
+    contra las distribuciones de referencia guardadas EN el artefacto, así que
+    un informe de un modelo anterior no dice nada del modelo activo. Sin esta
+    columna, el dashboard seguía mostrando "DERIVA DETECTADA" después de
+    reentrenar, describiendo un modelo que ya no existe.
+    """
 
     __tablename__ = "drift_reports"
 
@@ -153,3 +160,6 @@ class DriftReport(Base):
     drifted: Mapped[bool] = mapped_column(Boolean)
     metric: Mapped[float] = mapped_column(Float)   # share de columnas con drift, o estadístico KS
     detail_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    model_id: Mapped[int | None] = mapped_column(
+        ForeignKey("model_registry.id"), nullable=True, index=True
+    )
